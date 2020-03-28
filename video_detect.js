@@ -1,19 +1,27 @@
 // This should check whether a video is currently played and change the title accordingly
 
 var titlePrefix = "Playing ~ ";
+var oldPrefix = titlePrefix;
 
 function setTitle(playing) {
   // Set the window's title depending on bool playing
   if (playing) {
-    if (!document.title.startsWith(titlePrefix)) {
+    if (!document.title.startsWith(titlePrefix) && !document.title.startsWith(oldPrefix)) {
       document.title = titlePrefix + document.title;
+    } else if (document.title.startsWith(oldPrefix)) {
+      document.title = document.title.replace(oldPrefix, titlePrefix);
     }
   } else {
-    if (document.title.startsWith(titlePrefix)) {
-      document.title = document.title.replace(titlePrefix, "");
+    console.log("stopped video");
+    if (document.title.startsWith(titlePrefix) || document.title.startsWith(oldPrefix)) {
+      console.log("some prefix detected");
+      var re = titlePrefix + "|" + oldPrefix;
+      console.log("regex:" + re);
+      reg = new RegExp(re, "g");
+      document.title = document.title.replace(reg, "");
     }
   }
-
+  oldPrefix = titlePrefix;
 }
 
 function getStatus() {
@@ -63,7 +71,6 @@ function getStatus() {
   }
 
   setTitle(playstatus);
-  setTimeout(getStatus, 1000);
 }
 
 function onRun(pref) {
@@ -71,16 +78,20 @@ function onRun(pref) {
   if (pref.modifier) {
   titlePrefix = pref.modifier;
   }
-  getStatus();
 }
 
 function onError(e) {
   console.log("Error: " + e);
 }
 
-browser.storage.local.get("modifier")
-  .then(onRun, onError)
+function onPrefTout() {
+  browser.storage.local.get("modifier")
+    .then(onRun, onError)
+}
+
 console.log("Starting video_detect.js");
-//getStatus();
+onPrefTout();
+setInterval(onPrefTout, 5000);
+setInterval(getStatus, 1000);
 
 
