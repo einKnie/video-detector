@@ -1,11 +1,13 @@
 // This should check whether a video is currently played and change the title accordingly
 // plan: querySelect the element and add a onChanged listener to it!
 
+var supportedSites = ['youtube', 'vimeo', 'netflix'];
+
 var titlePrefix = "Playing ~ ";
 var oldPrefix = titlePrefix;
 
-var playStatus = false;
-var oldStatus = playStatus;
+var playerStatus = false;
+var oldPlayer = playerStatus;
 
 function setTitle(playing) {
   // Set the window's title depending on bool playing
@@ -25,75 +27,106 @@ function setTitle(playing) {
   oldPrefix = titlePrefix;
 }
 
-function getYoutubeStatus() {
-  // youtube-specific
-  console.log("getting youtube status"); 
-  var player =  document.getElementById("movie_player")
-  if (player == null) {
-    console.log("no youtube player detected");
-    return;
-  } else {
-    console.log("fetching video status");
-    playStatus = (player.className.includes("playing-mode")) && (!player.className.includes("unstarted-mode")); 
-  }
-}
-
-function getVimeoStatus() {
-  // vimeo-specific
-
-  var controls = document.getElementsByClassName("vp-controls-wrapper");
-  if (controls.length == 0) {
-    console.log("no vimeo player detected");
-    return;
-  } else {
-    controls = controls[0];
-    var button = controls.getElementsByTagName("button")[0];
-    playStatus = button.className.includes("playing");
-  } 
-}
-
-function getNetflixStatus() {
-  // netflix-specific
-
-  console.log("on netflix!");
-  var controls = document.getElementsByClassName("PlayerControlsNeo__button-control-row");
-  if (controls.length == 0) {
-    console.log("no netflix player detected");
-    return;
-  } else {
-    controls = controls[0];
-    if (controls.querySelector('[aria-label="Play"]') != null) {
-      playStatus = false;
-      console.log("netflix is paused");
-    } else if (controls.querySelector('[aria-label="Pause"]') != null) {
-      playStatus = true;
-      console.log("netflix is playing");
-    } else {
-      colsole.log("no button found");
+function getSiteName(url) {
+  var i;
+  for (i = 0; i < supportedSites.length; i++) {
+    if (url.includes(supportedSites[i])) {
+      return supportedSites[i];
     }
   }
+  return "other";
 }
 
-function getStatus() {
-  // determine status of video player on different websites
-  //var playStatus = false;
-  var site = document.URL;
-  console.log("On site: " + site);
-  oldStatus = playStatus;
+function getPlayer() {
+  var player = null;
+  switch (getSiteName(document.URL)) {
+    case "youtube": {
+      if (document.getElementById("movie_player") != null) {
+        player = document.getElementById("movie_player").querySelector('video');
+      }
+    } break;
+    case "vimeo": {
+      if (document.getElementsByClassName("vp-controls-wrapper").length != 0) {
+        player = document.querySelector('div[class^="player "]').querySelector('video');
+      }
+    } break;
+    case "netflix": {
+      if (document.getElementsByClassName("PlayerControlsNeo__button-control-row").length != 0) {
+        player = document.querySelector('div[class^="VideoContainer"]').querySelector('video');
+      }
+    } break;
+    default: console.log("invalid site");
+  }
+  return player;
+}
 
-  if (site.includes("youtube")) {
-    getYoutubeStatus();
-  } else if (site.includes("vimeo")) {
-    getVimeoStatus();
-  } else if (site.includes("netflix")) {
-    getNetflixStatus();
-  } else {
-    console.log("unknown site");
+function getPlayerStatus() {
+  console.log("checking player status...");
+  oldPlayer = playerStatus;
+  var player;
+  switch (getSiteName(document.URL)) {
+    case "youtube": {
+      player =  document.getElementById("movie_player");
+      if (player == null) {
+        console.log("no youtube player detected");
+        playerStatus = true;
+      } else {
+        player = document.getElementById("movie_player").querySelector('video');
+        playerStatus = true;
+      }
+    } break;
+    case "vimeo": {
+      player = document.getElementsByClassName("vp-controls-wrapper");
+      if (player.length == 0) {
+        console.log("no vimeo player detected");
+        playerStatus = false;
+      } else {
+        player = document.querySelector('div[class^="player "]').querySelector('video');
+        playerStatus = true;
+      }
+    } break;
+    case "netflix": {
+      player = document.getElementsByClassName("PlayerControlsNeo__button-control-row");
+      if (player.length == 0) {
+        console.log("no netflix player detected");
+        playerStatus = false;
+      } else {
+        player = document.querySelector('div[class^="VideoContainer"]').querySelector('video');
+        playerStatus = true;
+        console.log("found player");
+      }
+    } break;
+    default: console.log("invalid site");
   }
-  
-  if (oldStatus != playStatus) {
-     setTitle(playStatus);
+
+  if (playerStatus && !oldPlayer) {
+    console.log("setting status handlers");
+    setStatusHandler(player);
+  } else if (!playerStatus) {
+    console.log("no player found. rescheduling");
+    setTimeout(getPlayerStatus, 1000);
   }
+
+}
+
+function setStatusHandler(player) {
+  // install listeners for video play/paused
+  if (playerStatus) {
+    player.addEventListener("pause", onPause);
+    player.addEventListener("play", onPlay);
+  }
+  player.addEventListener("loadeddata", onEvent);
+  console.log("Set status listeners");
+}
+
+function onPause() {
+  console.log("video paused");
+  setTitle(false);
+}
+
+function onPlay() {
+  console.log("video playing");
+  setTitle(true);
 }
 
 function onRun(pref) {
@@ -113,9 +146,27 @@ function onPrefTout() {
     .then(onRun, onError)
 }
 
+function onEvent() {
+  console.log("An event has occurred!");
+
+  var player = getPlayer();
+  if (player.paused) {
+    console.log("no autostart");
+  } else {
+    console.log("autostart detected");
+    setTimeout(onPlay, 200);
+  }
+
+}
+
+function init() {
+  // initlialize stuff
+
+}
+
+
 console.log("Starting video_detect.js");
 onPrefTout();
 browser.storage.onChanged.addListener(onPrefTout);
-setInterval(getStatus, 1000);
-
+getPlayerStatus();
 

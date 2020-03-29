@@ -11,7 +11,8 @@
   },
 
   "permissions": [
-    "storage"
+    "storage",
+    "tabs"
   ],
 
   "options_ui": {
@@ -22,8 +23,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*"],
-      "js": ["video_detect.js"],
-      "run_at": "document_end"
+      "js": ["video_detect.js"]
     }
   ]
 
