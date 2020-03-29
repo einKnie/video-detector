@@ -5,8 +5,6 @@ var supportedSites = ['youtube', 'vimeo', 'netflix'];
 var titlePrefix = "Playing ~ ";
 var oldPrefix = titlePrefix;
 
-var playerStatus = false;
-var oldPlayer = playerStatus;
 
 /*
  * init()
@@ -19,6 +17,7 @@ function init() {
   initPlayer();
 }
 
+
 /*
  * initPlayer()
  * Check if a player exists on site.
@@ -27,18 +26,17 @@ function init() {
  */
 function initPlayer() {
   console.log("checking player status...");
-  oldPlayer = playerStatus;
   var player = getPlayer();
-  playerStatus = (player != null);
-
-  if (playerStatus) {
+  
+  if (player != null) {
     console.log("setting status handlers");
     initListeners(player);
-  } else if (!playerStatus) {
+  } else {
     console.log("no player found. rescheduling");
     setTimeout(initPlayer, 1000);
   }
 }
+
 
 /*
  * getPlayer()
@@ -67,6 +65,8 @@ function getPlayer() {
   return player;
 }
 
+      console.log("weird other thing changed");
+
 /*
  * setTitle(bool)
  * Add or remove the current Tab's title prefix, depending on parameter
@@ -87,6 +87,7 @@ function setTitle(playing) {
   }
   oldPrefix = titlePrefix;
 }
+
 
 /*
  * getSiteName()
@@ -124,6 +125,7 @@ function initListeners(player) {
   }
 }
 
+
 /*
  * videoRunning()
  * Return true if video is running in current player, false otherwise
@@ -136,9 +138,11 @@ function videoRunning() {
   return false;
 }
 
+
 //
 // CALLBACK HANDLER
 //
+
 
 /*
  * onPause()
@@ -148,6 +152,7 @@ function onPause() {
   console.log("video paused");
   setTitle(false);
 }
+
 
 /*
  * onPlay()
@@ -163,23 +168,25 @@ function onError(e) {
   console.log("Error: " + e);
 }
 
+
 /*
  * onSettingChanged()
  * Event handler for settings changes event.
  */
 function onSettingChanged() {
 
-  function applySetting(pref) {
+  var applySetting = function(pref) {
     if (pref.modifier) {
       titlePrefix = pref.modifier;
       setTitle(videoRunning());
     }
-  }
+  };
 
   console.log("preferences changed");
   browser.storage.local.get("modifier")
     .then(applySetting, onError);
 }
+
 
 /*
  * onPlayerReload()
@@ -190,7 +197,7 @@ function onSettingChanged() {
  */
 function onPlayerReload() {
   var player = getPlayer();
-  if (!player.paused) {
+  if ((player != null) && !player.paused) {
     console.log("autostart detected");
     setTimeout(onPlay, 500); // hacky hack: site name might not be fully loaded when video is loaded, wait a bit
   }
@@ -207,15 +214,15 @@ function mutationHandler(mutationList, observer) {
   
   for (let mutation of mutationList) {
     if (mutation.type == 'attributes') {
-      console.log(mutation.attributeName + " changed.");
+      console.log("attirbute changed: " + mutation.attributeName);
+      console.log(mutation);
       if (mutation.attributeName == "src") {
         initPlayer();
       }
-    } else {
-      console.log("weird other thing changed");
-    }
+    } 
   }
 }
+
 
 /*
  * setPlayerChangedHandler()
@@ -224,7 +231,7 @@ function mutationHandler(mutationList, observer) {
  */
 function setPlayerChangeHandler() {
   const player = getPlayer();
-  const config = { attributes: true };
+  const config = { attributeFilter: ['src'] };
 
   const observer = new MutationObserver(mutationHandler);
   observer.observe(player, config);

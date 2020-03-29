@@ -10,6 +10,10 @@
     }
   },
 
+  "icons": {
+    "48": "icons/icon.png"
+  },
+
   "permissions": [
     "storage",
     "tabs"
