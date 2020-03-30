@@ -1,0 +1,43 @@
+html, body {
+  width: 70px;
+  background-color: #4D4C4C;
+}
+
+.hidden {
+  display: none;
+}
+
+img {
+  border: 1px transparent;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%
+}
+
+.button {
+  border-radius: 4px;
+  margin: 3% auto;
+  padding: 4px;
+  text-align: center;
+  font-size: 1em;
+  cursor: pointer;
+  color: #AFAFAF;
+}
+
+.suspend:hover {
+  background-color: #5E5C5C;
+}
+
+.suspend  {
+  background-color: #4D4C4C;
+}
+
+.resume {
+  background-color: #FBFBC9;
+}
+
+.resume:hover {
+  background-color: #EAEA9D;
+}
+

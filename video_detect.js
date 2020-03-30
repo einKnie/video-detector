@@ -1,10 +1,12 @@
 // This should check whether a video is currently played and change the title accordingly
 
-var supportedSites = ['youtube', 'vimeo', 'netflix'];
+var supportedSites = ['youtube', 'vimeo', 'netflix', 'orf'];
 
-var titlePrefix = "Playing ~ ";
+var default_prefix = "Playing ~ ";
+var titlePrefix = default_prefix;
 var oldPrefix = titlePrefix;
 
+const observer = new MutationObserver(mutationHandler);
 
 /*
  * init()
@@ -12,9 +14,11 @@ var oldPrefix = titlePrefix;
  */
 function init() {
   console.log("Starting video_detect.js");
-  onSettingChanged();
   browser.storage.onChanged.addListener(onSettingChanged);
-  initPlayer();
+  browser.runtime.onMessage.addListener(handleMessage);
+  // need to make sure that settings are applied prior to initializing player
+  onSettingChanged()
+    .then(initPlayer); 
 }
 
 
@@ -60,12 +64,15 @@ function getPlayer() {
         player = document.querySelector('div[class^="VideoContainer"]').querySelector('video');
       }
     } break;
+    case "orf": {
+      if (document.getElementsByClassName("video_wrapper").length != 0) {
+        player = document.querySelector('div[class^="video_wrapper"]').querySelector('video');
+      }
+    } break;
     default: console.log("invalid site");
   }
   return player;
 }
-
-      console.log("weird other thing changed");
 
 /*
  * setTitle(bool)
@@ -80,9 +87,16 @@ function setTitle(playing) {
     }
   } else {
     console.log("stopped video");
-    if (document.title.startsWith(titlePrefix) || document.title.startsWith(oldPrefix)) {
-      reg = new RegExp(titlePrefix + "|" + oldPrefix, "g");
-      document.title = document.title.replace(reg, "");
+    try {
+      var re = RegExp("^(" + fixRegex(titlePrefix) + ")|^(" + fixRegex(oldPrefix) + ")", "g");
+      console.log(re);
+      console.log(document.title);
+      if (re.exec(document.title) != null) {
+        console.log("found prefix in title");
+        document.title = document.title.replace(re, "");
+      }
+    } catch(e) {
+      console.log(e);
     }
   }
   oldPrefix = titlePrefix;
@@ -114,7 +128,7 @@ function initListeners(player) {
     player.addEventListener("pause", onPause);
     player.addEventListener("play", onPlay);
     player.addEventListener("loadeddata", onPlayerReload);
-    setPlayerChangeHandler();
+    setPlayerChangeHandler(true);
     console.log("Set status listeners");
     if (!player.paused) {
       // if player is already running
@@ -123,6 +137,20 @@ function initListeners(player) {
   } else {
     console.log("invalid player");
   }
+}
+
+
+function exitListeners() {
+  // remove listeners for video
+  var player = getPlayer();
+  if (player != null) {
+    player.removeEventListener("pause", onPause);
+    player.removeEventListener("play", onPlay);
+    player.removeEventListener("loadeddata", onPlayerReload);
+    setPlayerChangeHandler(false);
+    setTitle(false);
+  }
+  console.log("disconnected from player");
 }
 
 
@@ -136,6 +164,11 @@ function videoRunning() {
     return !player.paused;
   }
   return false;
+}
+
+
+function fixRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 
@@ -174,17 +207,23 @@ function onError(e) {
  * Event handler for settings changes event.
  */
 function onSettingChanged() {
+  return new Promise((resolve, reject) => {
+    var applySetting = function(pref) {
+      console.log("applying settings");
+      if (pref.modifier) {
+        titlePrefix = pref.modifier;
+      } else {
+        // no modifier found
+        titlePrefix = default_prefix;
+      }
+      setTitle(videoRunning() && !pref.suspended);
+      resolve("success");
+    };
 
-  var applySetting = function(pref) {
-    if (pref.modifier) {
-      titlePrefix = pref.modifier;
-      setTitle(videoRunning());
-    }
-  };
-
-  console.log("preferences changed");
-  browser.storage.local.get("modifier")
-    .then(applySetting, onError);
+    console.log("preferences changed");
+    browser.storage.local.get(["modifier", "suspended"])
+      .then(applySetting, onError);
+  });
 }
 
 
@@ -214,7 +253,7 @@ function mutationHandler(mutationList, observer) {
   
   for (let mutation of mutationList) {
     if (mutation.type == 'attributes') {
-      console.log("attirbute changed: " + mutation.attributeName);
+      console.log("attribute changed: " + mutation.attributeName);
       console.log(mutation);
       if (mutation.attributeName == "src") {
         initPlayer();
@@ -229,12 +268,26 @@ function mutationHandler(mutationList, observer) {
  * Set up event handler for current player
  * to trigger when the player's attributes have changed.
  */
-function setPlayerChangeHandler() {
-  const player = getPlayer();
-  const config = { attributeFilter: ['src'] };
+function setPlayerChangeHandler(start) {
+  if (start) {
+    const player = getPlayer();
+    const config = { attributeFilter: ['src'] };
 
-  const observer = new MutationObserver(mutationHandler);
-  observer.observe(player, config);
+    //const observer = new MutationObserver(mutationHandler);
+    observer.observe(player, config);
+  } else {
+    observer.disconnect();
+  }
+}
+
+function handleMessage(message) {
+  // handle a message from background script
+  if (message.suspend) {
+    exitListeners();
+  } else {
+    initPlayer();
+  }
+  console.log("done");
 }
 
 init();

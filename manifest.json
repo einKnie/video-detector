@@ -1,9 +1,10 @@
 {
   "manifest_version": 2,
   "name": "VideoDetector",
-  "version": "0.1",
-
+  "author": "einKnie@gmx.at",
+  "version": "1.0",
   "description": "Detects if a video is played and adjusts title bar accordingly",
+  
   "applications": {
     "gecko": {
       "id": "einKnie@gmx.at"
@@ -12,6 +13,13 @@
 
   "icons": {
     "48": "icons/icon.png"
+  },
+
+  "browser_action": {
+    "default_icon":  "icons/icon.png",
+    "default_title": "videoDetector",
+    "browser_style": true,
+    "default_popup": "popup/suspend.html"
   },
 
   "permissions": [
@@ -23,10 +31,14 @@
     "page": "options.html"
   },
 
+  "background": {
+    "scripts": ["vd_background.js"]
+  },
+
 
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*"],
+      "matches": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*", "*://*.orf.at/*"],
       "js": ["video_detect.js"]
     }
   ]

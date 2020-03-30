@@ -6,8 +6,9 @@ var mod_default = "Playing ~ ";
 function saveOptions(e) {
   e.preventDefault();
   browser.storage.local.set({
-    modifier: document.querySelector("#modifier").value
+    modifier: document.querySelector("#modifier").value.replace(/^\s+/g, '').replace(/(\s)+/g, '$1')
   });
+  restoreOptions();
 }
 
 function restoreOptions() {
