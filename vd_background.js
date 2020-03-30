@@ -11,7 +11,7 @@ function handleMessage(message) {
   console.log("background script received message");
   var msgValue = message.value;
   console.log(msgValue);
-
+  
   var tabs = browser.tabs.query({"url": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*", "*://*.orf.at/*"]});
   if (tabs.length == 0) {
     console.log("no tabs found");

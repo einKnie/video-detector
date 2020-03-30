@@ -25,44 +25,13 @@ function setButtonText() {
   }
 }
 
-/*
-function handlePopupClick() {
-  console.log("clicked");
-}
-
-
-// @TODO: fix this so only the button listens to click
-document.addEventListener("click", function(e) {
-  if (document.hasFocus()) {
-    console.log("focus");
-  } else {
-    console.log("no focus");
-  }
-  if (!e.target.classList.contains("button")) {
-    console.log("no button");
-    return;
-  }
-  console.log("button pressed");
-  if (e.target.textContent == default_suspend) {
-    e.target.textContent = default_resume;
-    browser.runtime.sendMessage({"value": true});
-  } else {
-    e.target.textContent = default_suspend;
-    browser.runtime.sendMessage({"value": false});
-  }
-});
-*/
 function onSuspendClicked(e) {
   console.log("suspend button clicked");
-  /*if (typeof onSuspendClicked.suspended == 'undefined') {
-    onSuspendClicked.suspended = suspendState;
-  }
-  onSuspendClicked.suspended = !onSuspendClicked.suspended;*/
+
   suspendState = !suspendState;
   setButtonText(suspendState);
   browser.runtime.sendMessage({value: suspendState});
   browser.storage.local.set({suspended: suspendState});
-
 }
 
 function fetchLocalState() {

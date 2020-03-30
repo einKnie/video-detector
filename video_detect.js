@@ -1,10 +1,14 @@
 // This should check whether a video is currently played and change the title accordingly
+// @TODO: fix suspend setting propagation: find _one_ way to do this, and the stick to that.
+// 
 
 var supportedSites = ['youtube', 'vimeo', 'netflix', 'orf'];
 
 var default_prefix = "Playing ~ ";
 var titlePrefix = default_prefix;
 var oldPrefix = titlePrefix;
+
+var globalSuspended = false;
 
 const observer = new MutationObserver(mutationHandler);
 
@@ -17,7 +21,7 @@ function init() {
   browser.storage.onChanged.addListener(onSettingChanged);
   browser.runtime.onMessage.addListener(handleMessage);
   // need to make sure that settings are applied prior to initializing player
-  onSettingChanged()
+  initSettings()
     .then(initPlayer); 
 }
 
@@ -33,10 +37,8 @@ function initPlayer() {
   var player = getPlayer();
   
   if (player != null) {
-    console.log("setting status handlers");
-    initListeners(player);
+    if (!globalSuspended) initListeners(player);
   } else {
-    console.log("no player found. rescheduling");
     setTimeout(initPlayer, 1000);
   }
 }
@@ -207,8 +209,9 @@ function onError(e) {
  * Event handler for settings changes event.
  */
 function onSettingChanged() {
-  return new Promise((resolve, reject) => {
-    var applySetting = function(pref) {
+  console.log("preferences changed");
+  browser.storage.local.get(["modifier", "suspended"])
+    .then(function(pref) {
       console.log("applying settings");
       if (pref.modifier) {
         titlePrefix = pref.modifier;
@@ -216,15 +219,39 @@ function onSettingChanged() {
         // no modifier found
         titlePrefix = default_prefix;
       }
+      globalSuspend = pref.suspended;
       setTitle(videoRunning() && !pref.suspended);
+    }, onError);
+}
+
+/*
+ * initSettings()
+ * Apply settings from local storage
+ */
+function initSettings() {
+  // return a Promise to make the it possible
+  // to wait for this function's completion (in init())
+  // before doing other init stuff
+  return new Promise((resolve, reject) => {
+    var applySetting = function(pref) {
+      console.log("applying settings");
+      console.log(pref);
+      if ('modifier' in pref) {
+        titlePrefix = pref.modifier;
+      } else {
+        // no modifier found
+        titlePrefix = default_prefix;
+      }
+      globalSuspended = pref.suspended | false;
       resolve("success");
     };
 
-    console.log("preferences changed");
+    console.log("retrieving settings");
     browser.storage.local.get(["modifier", "suspended"])
       .then(applySetting, onError);
   });
 }
+
 
 
 /*
@@ -280,12 +307,20 @@ function setPlayerChangeHandler(start) {
   }
 }
 
+/*
+ * handleMessage()
+ * Deal with a message from background script
+ * @TODO: add error handling
+ */
 function handleMessage(message) {
   // handle a message from background script
-  if (message.suspend) {
-    exitListeners();
-  } else {
-    initPlayer();
+  if ('suspend' in message) {
+    globalSuspended = message.suspend;
+    if (message.suspend) {
+      exitListeners();
+    } else {
+      initPlayer();
+    }
   }
   console.log("done");
 }
