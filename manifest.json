@@ -35,11 +35,10 @@
     "scripts": ["vd_background.js"]
   },
 
-
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*", "*://*.orf.at/*", "*://*.vivo.sx/*"],
-      "js": ["video_detect.js"]
+      "js": ["vd_content.js"]
     }
   ]
 
