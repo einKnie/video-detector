@@ -18,8 +18,8 @@ fetchLocalState()
 function setButtonText() {
   if (suspendButton != null) {
     console.log("button found");
-    if (suspendState) suspendButton.textContent = "Resume";
-    else              suspendButton.textContent = "Suspend";
+    if (suspendState) suspendButton.textContent = default_resume;
+    else              suspendButton.textContent = default_suspend;
   } else {
     console.log("no button found");
   }

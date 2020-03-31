@@ -12,6 +12,9 @@ var globalSuspended = false;
 
 const observer = new MutationObserver(mutationHandler);
 
+// start
+init();
+
 /*
  * init()
  * Initialize script
@@ -37,7 +40,7 @@ function initPlayer() {
   var player = getPlayer();
   
   if (player != null) {
-    if (!globalSuspended) initListeners(player);
+    if (!globalSuspended) setListeners(true);
   } else {
     setTimeout(initPlayer, 1000);
   }
@@ -119,40 +122,35 @@ function getSiteName(url) {
   return "other";
 }
 
-
 /*
- * initListeners()
- * Set EventListeners for the loaded video player
+ * setListeners()
+ * Enable or disable player event monitoring
  */
-function initListeners(player) {
+function setListeners(on) {
   // install listeners for video play/paused
-  if (player != null) {
-    player.addEventListener("pause", onPause);
-    player.addEventListener("play", onPlay);
-    player.addEventListener("loadeddata", onPlayerReload);
-    setPlayerChangeHandler(true);
-    console.log("Set status listeners");
-    if (!player.paused) {
-      // if player is already running
-      onPlay();
-    }
-  } else {
-    console.log("invalid player");
-  }
-}
-
-
-function exitListeners() {
-  // remove listeners for video
   var player = getPlayer();
   if (player != null) {
-    player.removeEventListener("pause", onPause);
-    player.removeEventListener("play", onPlay);
-    player.removeEventListener("loadeddata", onPlayerReload);
-    setPlayerChangeHandler(false);
-    setTitle(false);
+    if (on) {
+      player.addEventListener("pause", onPause);
+      player.addEventListener("play", onPlay);
+      player.addEventListener("loadeddata", onPlayerReload);
+      setPlayerChangeHandler(true);
+      console.log("Set status listeners");
+      if (!player.paused) {
+        // if player is already running
+        onPlay();
+      }
+    } else {
+      player.removeEventListener("pause", onPause);
+      player.removeEventListener("play", onPlay);
+      player.removeEventListener("loadeddata", onPlayerReload);
+      setPlayerChangeHandler(false);
+      console.log("Disconnected status listeners");
+      if (!player.paused) {
+        setTitle(false);
+      }
+    }
   }
-  console.log("disconnected from player");
 }
 
 
@@ -168,7 +166,10 @@ function videoRunning() {
   return false;
 }
 
-
+/*
+ * fixRegex()
+ * Return a rexeg-friendly version of the given string 
+ */
 function fixRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -265,7 +266,7 @@ function onPlayerReload() {
   var player = getPlayer();
   if ((player != null) && !player.paused) {
     console.log("autostart detected");
-    setTimeout(onPlay, 500); // hacky hack: site name might not be fully loaded when video is loaded, wait a bit
+    setTimeout(onPlay, 1000); // hacky hack: site name might not be fully loaded when video is loaded, wait a bit
   }
 }
 
@@ -317,7 +318,7 @@ function handleMessage(message) {
   if ('suspend' in message) {
     globalSuspended = message.suspend;
     if (message.suspend) {
-      exitListeners();
+      setListeners(false);
     } else {
       initPlayer();
     }
@@ -325,4 +326,3 @@ function handleMessage(message) {
   console.log("done");
 }
 
-init();
