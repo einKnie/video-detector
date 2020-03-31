@@ -2,7 +2,7 @@
 // @TODO: fix suspend setting propagation: find _one_ way to do this, and the stick to that.
 // 
 
-var supportedSites = ['youtube', 'vimeo', 'netflix', 'orf'];
+var supportedSites = ['youtube', 'vimeo', 'netflix', 'orf', 'vivo'];
 
 var default_prefix = "Playing ~ ";
 var titlePrefix = default_prefix;
@@ -72,6 +72,11 @@ function getPlayer() {
     case "orf": {
       if (document.getElementsByClassName("video_wrapper").length != 0) {
         player = document.querySelector('div[class^="video_wrapper"]').querySelector('video');
+      }
+    } break;
+    case "vivo": {
+      if (document.getElementsByClassName("plyr").length != 0) {
+        player = document.querySelector('div[class^="plyr"]').querySelector('video');
       }
     } break;
     default: console.log("invalid site");
