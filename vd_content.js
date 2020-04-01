@@ -21,6 +21,9 @@ videoDetector = function() {
   // create observer here so we can access it at different times
   const observer = new MutationObserver(mutationHandler);
 
+  // video player object
+  var player = null;
+
   // start script execution
   init();
 
@@ -46,9 +49,16 @@ videoDetector = function() {
    */
   function initPlayer() {
     console.log("checking player status...");
-    var player = getPlayer();
+
     if (player != null) {
-    //if (getPlayer() != null) {
+      // cleanup old player
+      console.log("Cleaning up old player");
+      setListeners(false);
+      player = null;
+    }
+
+    player = getPlayer();
+    if (player != null) {
       console.log("player found");
       if (!isSuspended) {
         setListeners(true);
@@ -59,17 +69,21 @@ videoDetector = function() {
   }
 
 
-
   /*
    * getPlayer()
    * Return the current video player object, or null if none is found
    */
   function getPlayer() {
-    console.log("looking for player");
-    var player = null;
+    console.log("in getPlayer()");
+    if (player != null) {
+      // cleanup old player
+      console.log("Cleaning up old player");
+      setListeners(false);
+      player = null;
+    }
+
     switch (getSite(document.URL)) {
       case sites.YOUTUBE: {
-        console.log("youtube found");
         if (document.getElementById("movie_player") != null) {
           player = document.getElementById("movie_player").querySelector("video");
         }
@@ -96,13 +110,13 @@ videoDetector = function() {
       } break;
       default: console.log("invalid site");
     }
-    console.log(player);
     return player;
   }
 
+
   /*
    * setTitle(bool)
-   * Add or remove the current Tab's title prefix, depending on parameter
+   * Add or remove the current tab's title prefix, depending on parameter
    */
   function setTitle(playing) {
     if (playing) {
@@ -113,15 +127,13 @@ videoDetector = function() {
       }
     } else {
       var re = RegExp(`^(${fixRegex(currPrefix)})|^(${fixRegex(lastPrefix)})`, "g");
-      console.log(re);
-      console.log(document.title);
       if (re.exec(document.title) != null) {
-        console.log("found prefix in title");
         document.title = document.title.replace(re, "");
       }
     }
     lastPrefix = currPrefix;
   }
+
 
   /*
    * getSite(string)
@@ -135,7 +147,9 @@ videoDetector = function() {
         }
       }
     }
+    return "other";
   }
+
 
   /*
    * setListeners()
@@ -143,7 +157,6 @@ videoDetector = function() {
    */
   function setListeners(on) {
     // install listeners for video play/paused
-    var player = getPlayer();
     if (player != null) {
       if (on) {
         player.addEventListener("pause", onPause);
@@ -174,12 +187,12 @@ videoDetector = function() {
    * Return true if video is running in current player, false otherwise
    */
   function videoRunning() {
-    var player = getPlayer();
     if (player != null) {
       return !player.paused;
     }
     return false;
   }
+
 
   /*
    * fixRegex()
@@ -234,7 +247,7 @@ videoDetector = function() {
           // no modifier found
           currPrefix = prefixDefault;
         }
-        globalSuspend = pref.suspended;
+        isSuspended = pref.suspended;
         setTitle(videoRunning() && !pref.suspended);
       }, onError);
   }
@@ -257,7 +270,8 @@ videoDetector = function() {
           // no modifier found
           currPrefix = prefixDefault;
         }
-        isSuspended = pref.suspended | false;
+        isSuspended = pref.suspended || false;
+        console.log(`Applied settings: ${currPrefix}, ${isSuspended}`);
         resolve("success");
       };
 
@@ -277,7 +291,6 @@ videoDetector = function() {
    * @TODO: check if there is a way to catch event on when title is set.
    */
   function onPlayerReload() {
-    var player = getPlayer();
     if ((player != null) && !player.paused) {
       console.log("autostart detected");
       setTimeout(onPlay, 1000); // hacky hack: site name might not be fully loaded when video is loaded, wait a bit
@@ -295,8 +308,6 @@ videoDetector = function() {
 
     for (let mutation of mutationList) {
       if (mutation.type == "attributes") {
-        console.log(`attribute changed: ${mutation.attributeName}`);
-        console.log(mutation);
         if (mutation.attributeName == "src") {
           initPlayer();
         }
@@ -312,7 +323,6 @@ videoDetector = function() {
    */
   function setPlayerChangeHandler(start) {
     if (start) {
-      const player = getPlayer();
       if (player == null) {
         return;
       }
