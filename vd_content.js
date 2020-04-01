@@ -2,7 +2,15 @@
 // @TODO: fix suspend setting propagation: find _one_ way to do this, and the stick to that.
 // 
 
-var supportedSites = ['youtube', 'vimeo', 'netflix', 'orf', 'vivo'];
+
+/*const supportedSites = {
+  YOUTUBE: 'youtube',
+  VIMEO:   'vimeo',
+  NETFLIX: 'netflix',
+  ORF:     'orf',
+  VIVO:    'vivo'
+};*/
+const supportedSites = ['youtube', 'vimeo', 'netflix', 'orf', 'vivo'];
 
 var default_prefix = "Playing ~ ";
 var titlePrefix = default_prefix;
@@ -96,9 +104,9 @@ function setTitle(playing) {
       document.title = document.title.replace(oldPrefix, titlePrefix);
     }
   } else {
-    console.log("stopped video");
     try {
-      var re = RegExp("^(" + fixRegex(titlePrefix) + ")|^(" + fixRegex(oldPrefix) + ")", "g");
+
+      var re = RegExp(`^(${fixRegex(titlePrefix)})|^(${fixRegex(oldPrefix)})`, "g");
       console.log(re);
       console.log(document.title);
       if (re.exec(document.title) != null) {
@@ -114,8 +122,8 @@ function setTitle(playing) {
 
 
 /*
- * getSiteName()
- * Return a string for each supported site
+ * getSiteNames(string)
+ * Return the name of the site, or 'other' if the site is not supported
  */
 function getSiteName(url) {
   var i;
@@ -218,7 +226,6 @@ function onSettingChanged() {
   console.log("preferences changed");
   browser.storage.local.get(["modifier", "suspended"])
     .then(function(pref) {
-      console.log("applying settings");
       if (pref.modifier) {
         titlePrefix = pref.modifier;
       } else {
@@ -286,7 +293,7 @@ function mutationHandler(mutationList, observer) {
   
   for (let mutation of mutationList) {
     if (mutation.type == 'attributes') {
-      console.log("attribute changed: " + mutation.attributeName);
+      console.log(`attribute changed: ${mutation.attributeName}`);
       console.log(mutation);
       if (mutation.attributeName == "src") {
         initPlayer();
@@ -304,10 +311,10 @@ function mutationHandler(mutationList, observer) {
 function setPlayerChangeHandler(start) {
   if (start) {
     const player = getPlayer();
-    const config = { attributeFilter: ['src'] };
-
-    //const observer = new MutationObserver(mutationHandler);
-    observer.observe(player, config);
+    if (player == null) {
+      return;
+    } 
+    observer.observe(player, { attributeFilter: ['src'] });
   } else {
     observer.disconnect();
   }
@@ -328,6 +335,5 @@ function handleMessage(message) {
       initPlayer();
     }
   }
-  console.log("done");
 }
 

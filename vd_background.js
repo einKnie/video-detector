@@ -28,7 +28,7 @@ function handleMessage(message) {
   tabs.then((x) => {x.forEach(function(item, index) {
     try {
       browser.tabs.sendMessage(item.id, {suspend: suspendState });
-      console.log("sent message to tab id " + item.id + " (" + item.title + ")");
+      console.log(`sent message to tab id ${item.id} (${item.title})`);
 
     } catch(e) {
       console.log(e);
