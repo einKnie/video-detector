@@ -2,6 +2,8 @@
 // @TODO: fix suspend setting propagation: find _one_ way to do this, and the stick to that.
 
 videoDetector = function() {
+  
+  var prefixDefault = "Playing ~ ";
 
   // supported websites
   const sites = {
@@ -12,8 +14,13 @@ videoDetector = function() {
     VIVO:    "vivo"
   };
 
+  var settings = {
+    prefix:      prefixDefault,
+    isSuspended: false
+  };
+
   // 'globals'
-  var prefixDefault = "Playing ~ ";
+  //var prefixDefault = "Playing ~ ";
   var currPrefix    = prefixDefault;
   var lastPrefix    = currPrefix;
   var isSuspended   = false;
@@ -140,7 +147,7 @@ videoDetector = function() {
    * Return the name of the site, or 'other' if the site is not supported
    */
   function getSite(url) {
-    for (site in sites) {
+    for (let site in sites) {
       if (sites.hasOwnProperty(site)) {
         if (url.includes(sites[site])) {
           return sites[site];
@@ -241,6 +248,7 @@ videoDetector = function() {
     console.log("preferences changed");
     browser.storage.local.get(["modifier", "suspended"])
       .then(function(pref) {
+        console.log(pref);
         if (pref.modifier) {
           currPrefix = pref.modifier;
         } else {
@@ -254,7 +262,7 @@ videoDetector = function() {
 
   /*
    * initSettings()
-   * Apply settings from local storage
+   * Apply settings from local storage.
    */
   function initSettings() {
     // return a Promise to make the it possible
@@ -264,19 +272,15 @@ videoDetector = function() {
       var applySetting = function(pref) {
         console.log("applying settings");
         console.log(pref);
-        if ("modifier" in pref) {
-          currPrefix = pref.modifier;
-        } else {
-          // no modifier found
-          currPrefix = prefixDefault;
-        }
-        isSuspended = pref.suspended || false;
+        currPrefix  = pref.modifier || prefixDefault;
+        isSuspended = pref.suspended || isSuspended;
         console.log(`Applied settings: ${currPrefix}, ${isSuspended}`);
         resolve("success");
       };
 
       console.log("retrieving settings");
-      browser.storage.local.get(["modifier", "suspended"])
+      browser.storage.local.get({ modifier: currPrefix,
+                                  suspended: false})
         .then(applySetting, onError);
     });
   }
@@ -338,6 +342,7 @@ videoDetector = function() {
    */
   function handleMessage(message) {
     // handle a message from background script
+    console.log("received message from background");
     if ("suspend" in message) {
       isSuspended = message.suspend;
       if (message.suspend) {
