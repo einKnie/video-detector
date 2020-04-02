@@ -1,0 +1,69 @@
+html, body {
+  background-color: #4e504c /*#4D4C4C*/;
+  font-family: sans-serif;
+}
+
+.hidden {
+  display: none;
+}
+
+.titletext {
+  font-size: larger;
+}
+
+p {
+  margin: 5px 10px;
+}
+
+label {
+  margin: 5px;
+}
+
+input {
+  margin: 5px 10px;
+}
+
+.applybutton {
+  margin: 0px auto;
+  background-color: #4e504c;
+  color: #ebf9eb;
+  border: 1px solid #babcb7;
+  font-size:  large;
+}
+
+checkbox {
+  margin: 5px;
+  float: left;
+}
+
+.prefixtext {
+  margin: 10px auto;
+  border: 1px solid #babcb7;  
+}
+
+
+.sitebuttons {
+  margin: 10px auto;
+  border: 1px solid #babcb7;
+}
+
+.outer_box {
+  display: flex;
+}
+
+.logo_wrapper {
+  width: 150px;
+  margin: 10px 10px;
+  border: 1px solid #babcb7;
+}
+
+.logo {
+  display: block;
+  margin: 10px auto;
+}
+
+.apptext {
+  margin: auto 5px;
+  text-justify: inter-word;
+  text-align: center;
+}

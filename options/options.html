@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="options.css"/>
+    <title>VideoDetector Settings</title>
+  </head>
+
+  <body>
+    <p class="titletext" id="title">VideoDetector settings</p>
+    <p id="text">Set your settings here!</p>
+    <div class="outer_box">
+      <form>
+        <div class="sitebuttons" id="sitebuttons">
+          <!-- This is filled by the script -->
+        </div>
+        <div class="prefixtext">
+          <p>Set the string that will be added to the start of the tab title</p>
+          <input type="text" id="modifier">
+          
+        </div>
+      </form>
+      <!-- put image or something here -->
+      <div class="logo_wrapper">
+        <img class="logo" src="../icons/icon.png">
+        <p class="apptext" id="apptext"> <!-- This will be set by the script --> </p>
+      </div>
+    </div>
+    <button class="applybutton" id="applybutton" type="submit">Apply</button>
+    <script src="options.js"></script>
+
+  </body>
+
+</html>

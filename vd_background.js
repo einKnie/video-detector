@@ -127,7 +127,7 @@ var sBackground = function() {
       var tabcfg = {
         active: true,
         index: index + 1, 
-        url: "options.html"
+        url: "options/options.html"
       };
       browser.tabs.create(tabcfg)
         .then(function() { console.log("yay");}, onError);
