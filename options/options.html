@@ -8,16 +8,18 @@
   </head>
 
   <body>
-    <p class="titletext" id="title">VideoDetector settings</p>
-    <p id="text">Set your settings here!</p>
+    <div id="title">
+      <p id="titletext">VideoDetector settings</p>
+      <p id="text">Set your settings here!</p>
+    </div>
     <div class="outer_box">
       <form>
-        <div class="sitebuttons" id="sitebuttons">
+        <div id="sitebuttons">
           <!-- This is filled by the script -->
         </div>
         <div class="prefixtext">
           <p>Set the string that will be added to the start of the tab title</p>
-          <input type="text" class="modifier" id="modifier">
+          <input type="text" id="modifier">
           
         </div>
         
@@ -26,8 +28,10 @@
       <div class="logo_wrapper">
         <img class="logo" src="../icons/icon.png">
         <p class="apptext" id="apptext"> <!-- This will be set by the script --> </p>
+        <p class="appversion" id="appversion"> <!--- This will be filled by the script --> </p>
       </div>
     </div>
+    
     <button class="applybutton" id="applybutton">Apply</button>
     <script src="options.js"></script>
 

@@ -1,50 +1,67 @@
+/*
+ * Horrible stuff...
+ * But it works for now and will be fixed in the future
+ */
+
+
 html, body {
-  background-color:  #1f201e;
-  font-family:       sans-serif;
-  color:             #aaaca6;
+  background-color: #1f201e;
+  font-family:      sans-serif;
+  color:            #aaaca6;
+  width:            700px;
+  display:          block;
+  margin:           10px auto;
 }
 
 .hidden {
-  display: none;
-}
-
-.titletext {
-  font-size: larger;
+  display:    none;
 }
 
 p {
-  margin: 5px 10px;
+  margin:     5px 10px auto 10px;
+}
+
+#title {
+  display:    block;
+  margin:     10px auto;
+  text-align: center;
+
+}
+
+#titletext {
+  font-size:  larger;
+  display:    block;
+  margin:     10px auto;
 }
 
 label {
-  margin: 5px;
+  margin:     5px 0px;
 }
 
-input {
-  margin: 5px 10px;
+input[type="checkbox"] {
+  margin:           5px 10px;
+  background-color: #ff0000;
+  color:            #00ff00;
 }
 
-.modifier {
+#modifier {
+  margin:           5px 10px;
   background-color: #8d9089;
   border-color:     #4e504c;
   color:            #1f201e;
 }
 
 .applybutton {
-  margin: 0px auto;
+  margin:           0px auto;
   background-color: #1f201e;
-  color: #aaaca6;
-  border: 1px solid #babcb7;
-  font-size:  large;
+  color:            #aaaca6;
+  border:           1px solid #babcb7;
+  font-size:        large;
+  display:          block;
 }
 
 .applybutton:hover {
   background-color: #4e504c;
-}
-
-checkbox {
-  margin: 5px;
-  float:  left;
 }
 
 .prefixtext {
@@ -52,8 +69,7 @@ checkbox {
   border: 1px solid #babcb7;  
 }
 
-
-.sitebuttons {
+#sitebuttons {
   margin: 10px auto;
   border: 1px solid #babcb7;
 }
@@ -75,5 +91,10 @@ checkbox {
 
 .apptext {
   margin:       auto 5px;
+  text-align:   center;
+}
+
+.appversion {
+  margin:       10px 5px auto 5px;
   text-align:   center;
 }
