@@ -1,6 +1,7 @@
 html, body {
-  background-color: #4e504c /*#4D4C4C*/;
-  font-family: sans-serif;
+  background-color:  #1f201e;
+  font-family:       sans-serif;
+  color:             #aaaca6;
 }
 
 .hidden {
@@ -23,17 +24,27 @@ input {
   margin: 5px 10px;
 }
 
+.modifier {
+  background-color: #8d9089;
+  border-color:     #4e504c;
+  color:            #1f201e;
+}
+
 .applybutton {
   margin: 0px auto;
-  background-color: #4e504c;
-  color: #ebf9eb;
+  background-color: #1f201e;
+  color: #aaaca6;
   border: 1px solid #babcb7;
   font-size:  large;
 }
 
+.applybutton:hover {
+  background-color: #4e504c;
+}
+
 checkbox {
   margin: 5px;
-  float: left;
+  float:  left;
 }
 
 .prefixtext {
@@ -52,18 +63,17 @@ checkbox {
 }
 
 .logo_wrapper {
-  width: 150px;
+  width:  150px;
   margin: 10px 10px;
   border: 1px solid #babcb7;
 }
 
 .logo {
-  display: block;
-  margin: 10px auto;
+  display:  block;
+  margin:   10px auto;
 }
 
 .apptext {
-  margin: auto 5px;
-  text-justify: inter-word;
-  text-align: center;
+  margin:       auto 5px;
+  text-align:   center;
 }
