@@ -8,21 +8,21 @@ html, body {
 }
 
 img {
-  border: 1px transparent;
-  display: block;
-  margin-left: auto;
+  border:       1px transparent;
+  display:      block;
+  margin-left:  auto;
   margin-right: auto;
-  width: 50%
+  width:        50%
 }
 
 .button {
-  border-radius: 4px;
-  margin: 3% auto;
-  padding: 4px;
-  text-align: center;
-  font-size: 1em;
-  cursor: pointer;
-  color: #AFAFAF;
+  border-radius:  4px;
+  margin:         3% auto;
+  padding:        4px;
+  text-align:     center;
+  font-size:      1em;
+  cursor:         pointer;
+  color:          #AFAFAF;
 }
 
 .suspend:hover {

@@ -3,7 +3,7 @@
   "name": "VideoDetector",
   "author": "einKnie@gmx.at",
   "version": "1.0",
-  "description": "Detects if a video is played and adjusts title bar accordingly",
+  "description": "Detects if a video is played in a tab and adjusts title bar accordingly",
   
   "applications": {
     "gecko": {
