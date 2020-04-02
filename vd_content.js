@@ -13,6 +13,12 @@ videoDetector = function() {
     ORF:     "orf",
     VIVO:    "vivo"
   };
+  
+  var activeSites = { "youtube.com": true,
+                      "vimeo.com": true,
+                      "netflix.com": true,
+                      "orf.at": true,
+                      "vivo.sx": true };
 
   var settings = {
     prefix:      prefixDefault,
@@ -24,6 +30,7 @@ videoDetector = function() {
   var currPrefix    = prefixDefault;
   var lastPrefix    = currPrefix;
   var isSuspended   = false;
+  var siteSuspended = false;
 
   // create observer here so we can access it at different times
   const observer = new MutationObserver(mutationHandler);
@@ -41,7 +48,6 @@ videoDetector = function() {
   function init() {
     console.log("Starting content script");
     browser.storage.onChanged.addListener(onSettingChanged);
-    browser.runtime.onMessage.addListener(handleMessage);
     // need to make sure that settings are applied prior to initializing player
     initSettings()
       .then(initPlayer);
@@ -67,7 +73,7 @@ videoDetector = function() {
     player = getPlayer();
     if (player != null) {
       console.log("player found");
-      if (!isSuspended) {
+      if (!isSuspended && !siteSuspended) {
         setListeners(true);
       }
     } else {
@@ -246,7 +252,7 @@ videoDetector = function() {
    */
   function onSettingChanged() {
     console.log("preferences changed");
-    browser.storage.local.get(["modifier", "suspended"])
+    browser.storage.local.get(["modifier", "suspended", "sites"])
       .then(function(pref) {
         console.log(pref);
         if (pref.modifier) {
@@ -256,8 +262,23 @@ videoDetector = function() {
           currPrefix = prefixDefault;
         }
         isSuspended = pref.suspended;
-        setTitle(videoRunning() && !pref.suspended);
+        checkSiteStatus(pref.sites);
+        if (siteSuspended || isSuspended) {
+          setListeners(false);
+        } else {
+          initPlayer();
+        }
       }, onError);
+  }
+  
+  
+  function checkSiteStatus(sites) {
+    Object.getOwnPropertyNames(sites).forEach(function(val) {
+      if (document.URL.includes(val)) {
+        console.log("found own site");
+        siteSuspended = !sites[val];
+      }
+    });
   }
 
   /*
@@ -274,13 +295,17 @@ videoDetector = function() {
         console.log(pref);
         currPrefix  = pref.modifier || prefixDefault;
         isSuspended = pref.suspended || isSuspended;
+        activeSites = pref.sites || activeSites;
+        checkSiteStatus(activeSites);
         console.log(`Applied settings: ${currPrefix}, ${isSuspended}`);
+        console.log(activeSites);
         resolve("success");
       };
 
       console.log("retrieving settings");
       browser.storage.local.get({ modifier: currPrefix,
-                                  suspended: false})
+                                  suspended: false,
+                                  sites: activeSites })
         .then(applySetting, onError);
     });
   }
@@ -307,7 +332,7 @@ videoDetector = function() {
    * Handle a mutation event.
    * In case the player's src attribute has changed, reinit the player by calling initPlayer.
    */
-  function mutationHandler(mutationList, observer) {
+  function mutationHandler(mutationList) {
     console.log("data mutation observed!");
 
     for (let mutation of mutationList) {
@@ -339,8 +364,9 @@ videoDetector = function() {
   /*
    * handleMessage()
    * Deal with a message from background script
+   * TODO: remove
    */
-  function handleMessage(message) {
+ /* function handleMessage(message) {
     // handle a message from background script
     console.log("received message from background");
     if ("suspend" in message) {
@@ -351,6 +377,6 @@ videoDetector = function() {
         initPlayer();
       }
     }
-  }
+  } */
 
 }();

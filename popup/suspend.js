@@ -1,7 +1,6 @@
 // addon suspension
 // functions here shouldbe called when the addon's popup is called and suspend-button pressed
-// in which case, stop the addon. 
-// how? i have no idea
+
 
 var default_suspend = "Suspend";
 var default_resume = "Resume";
@@ -12,6 +11,7 @@ fetchLocalState()
   .then(function() {
     setButtonText(suspendState);
     document.querySelector('[class="button suspend"]').addEventListener("click", onSuspendClicked);
+    document.querySelector('[class="button settings"]').addEventListener("click", onSettingsClicked);
   }, onError());
 
 
@@ -25,13 +25,19 @@ function setButtonText() {
   }
 }
 
-function onSuspendClicked(e) {
+function onSuspendClicked() {
   console.log("suspend button clicked");
 
   suspendState = !suspendState;
   setButtonText(suspendState);
-  browser.runtime.sendMessage({value: suspendState});
   browser.storage.local.set({suspended: suspendState});
+}
+
+
+function onSettingsClicked() {
+  console.log("settings button clicked");
+  
+  browser.runtime.sendMessage({settings: true});
 }
 
 function fetchLocalState() {

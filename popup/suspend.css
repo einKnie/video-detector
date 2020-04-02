@@ -41,3 +41,11 @@ img {
   background-color: #EAEA9D;
 }
 
+.settings {
+  background-color: #4D4C4C;
+}
+
+.settings:hover {
+  background-color: #5E5C5C;
+}
+

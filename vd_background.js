@@ -6,11 +6,17 @@ var sBackground = function() {
 
   var prefix_default    = "Playing ~ ";
   var suspended_default = false;
-  var supportedSites = ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*", "*://*.orf.at/*", "*://*.vivo.sx/*"];
+  var activeSites = { "youtube.com": true,
+                      "vimeo.com": true,
+                      "netflix.com": true,
+                      "orf.at": true,
+                      "vivo.sx": true };
 
+  
   var settings = {
     modifier: prefix_default,
-    suspended: suspended_default
+    suspended: suspended_default,
+    sites: activeSites
   };
 
   browser.runtime.onMessage.addListener(handleMessage);
@@ -23,11 +29,12 @@ var sBackground = function() {
     try {
     console.log("initial settings");
     console.log(settings);
-    browser.storage.local.get(["modifier", "suspended"])
+    browser.storage.local.get(["modifier", "suspended", "sites"])
       .then(function(pref) {
         var newPrefs = {
           modifier: pref.modifier || prefix_default,
-          suspended: pref.suspended || suspended_default
+          suspended: pref.suspended || suspended_default,
+          sites: pref.sites || activeSites
         };
         console.log(newPrefs);
         browser.storage.local.set(newPrefs);
@@ -41,35 +48,90 @@ var sBackground = function() {
   function onError(e) {
     console.log("error: " + e);
   }
+  
+  
+  /*
+   * Return an array of match-strings for the supported sites
+   */
+  function getSiteMatches() {
+    var arr = [];
+    Object.getOwnPropertyNames(activeSites).forEach(function(val) {
+      console.log(val + ":" + activeSites[val]);
+      arr.push(`*://*.${val}/*`);
+    });
+    console.log(arr);
+    return arr;
+  }
 
 
   /*
    * handleMessage()
    * Deal with an incoming message from the toolbar button
+   * TODO: remove handling of suspend-message since that does not exist anymore
    */
   function handleMessage(message) {
     console.log("background script received message");
-    if (!("value" in message)) {
-      return;
-    }
-    var suspendState = message.value;
-    console.log("Suspended: " + suspendState);
+    if ("value" in message) {
 
-    // get all relevant tabs and send message
-    var tabs = browser.tabs.query({"url": supportedSites});
-    if (tabs.length == 0) {
-      console.log("no tabs found");
-      return;
-    }
-    tabs.then((x) => {x.forEach(function(item, index) {
-      try {
-        browser.tabs.sendMessage(item.id, {suspend: suspendState });
-        console.log(`sent message to tab id ${item.id} (${item.title})`);
+      var suspendState = message.value;
+      console.log("Suspended: " + suspendState);
 
-      } catch(e) {
-        console.log(e);
+      // get all relevant tabs and send message
+      var tabs = browser.tabs.query({"url": getSiteMatches()});
+      if (tabs.length == 0) {
+        console.log("no tabs found");
+        return;
       }
+      tabs.then((x) => {x.forEach(function(item) {
+        try {
+          browser.tabs.sendMessage(item.id, {suspend: suspendState });
+          console.log(`sent message to tab id ${item.id} (${item.title})`);
 
-    })}, onError);
+        } catch(e) {
+          console.log(e);
+        }
+      });}, onError);
+    } else if ("settings" in message) {
+      console.log("settings message received");
+      openSettingsPage();
+    }
   }
+
+  
+  /*
+   * getCurrentTab()
+   * Return the index ( = position) of the currently active tab
+   */
+  function getCurrentTab(winInfo) {
+    return new Promise((resolve, reject) => {
+
+      for (let tabInfo of winInfo.tabs) {
+        if (tabInfo.active == true) {
+          console.log("active tab found");
+          resolve(tabInfo.index);
+        }
+      }
+      reject("Failed to get current tab");
+    });
+  }
+
+  
+  /*
+   * openSettingsPage()
+   * Open a new tab with the Addon's setting page
+   */
+  function openSettingsPage() {
+    // open new tab with settings page next to current tab
+    var winid = browser.windows.getCurrent({populate: true});
+    winid.then(getCurrentTab, onError).then(function(index) {
+      var tabcfg = {
+        active: true,
+        index: index + 1, 
+        url: "options.html"
+      };
+      browser.tabs.create(tabcfg)
+        .then(function() { console.log("yay");}, onError);
+    }, onError);
+  }
+
 }();
