@@ -3,7 +3,7 @@
   "name": "VideoDetector",
   "author": "einKnie@gmx.at",
   "version": "1.0",
-  "description": "Detects if a video is played in a tab and adjusts title bar accordingly",
+  "description": "Detects if a video is played in a tab and prepends the tab's title with a custom string.",
   
   "applications": {
     "gecko": {
@@ -19,7 +19,7 @@
     "default_icon":  "icons/icon.png",
     "default_title": "videoDetector",
     "browser_style": true,
-    "default_popup": "popup/suspend.html"
+    "default_popup": "popup/popup.html"
   },
 
   "permissions": [
@@ -42,5 +42,5 @@
     }
   ]
 
- 
+
 }
