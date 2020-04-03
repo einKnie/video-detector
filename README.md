@@ -19,7 +19,7 @@ The extension is now installed and active.
 
 ## Usage
 
-The addon currently supports **youtube.com**, **vimeo.com**, **orf.at**, **vivo.sx**, and **netflix.com**.  
+The addon currently supports **youtube.com**, **vimeo.com**, **orf.at**, **vivo.sx**, **twitch.tv**, and **netflix.com**.  
 While the addon is active, it will monitor any Firefox tabs on a supported site to detect if a video is playing.  
 As soon as a video starts playing,
 the title of the repective tab is changed to contain a custom string.
