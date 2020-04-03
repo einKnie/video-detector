@@ -2,8 +2,6 @@
 // @TODO: fix suspend setting propagation: find _one_ way to do this, and the stick to that.
 
 videoDetector = function() {
-  
-  var prefixDefault = "Playing ~ ";
 
   // supported websites
   const sites = {
@@ -13,16 +11,10 @@ videoDetector = function() {
     ORF:     "orf",
     VIVO:    "vivo"
   };
-  
-  var settings = {
-    modifier:   "",
-    suspended:  false,
-    sites:      {}
-  };
 
 
   // 'globals'
-  //var prefixDefault = "Playing ~ ";
+  var prefixDefault = "Playing ~ ";
   var currPrefix    = prefixDefault;
   var lastPrefix    = currPrefix;
   var isSuspended   = false;
@@ -223,18 +215,6 @@ videoDetector = function() {
 
 
   /*
-   * videoRunning()
-   * Return true if video is running in current player, false otherwise
-   */
-  function videoRunning() {
-    if (player != null) {
-      return !player.paused;
-    }
-    return false;
-  }
-
-
-  /*
    * fixRegex()
    * Return a rexeg-friendly version of the given string 
    */
@@ -299,6 +279,10 @@ videoDetector = function() {
   }
   
   
+  /*
+   * checkSiteStatus()
+   * Check if current site is suspended
+   */
   function checkSiteStatus(sites) {
     Object.getOwnPropertyNames(sites).forEach(function(val) {
       if (document.URL.includes(val)) {
