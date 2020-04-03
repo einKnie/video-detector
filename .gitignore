@@ -1,1 +1,3 @@
 *.swp
+*.backup
+web-ext-artifacts/
