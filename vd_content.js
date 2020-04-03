@@ -14,16 +14,12 @@ videoDetector = function() {
     VIVO:    "vivo"
   };
   
-  var activeSites = { "youtube.com": true,
-                      "vimeo.com": true,
-                      "netflix.com": true,
-                      "orf.at": true,
-                      "vivo.sx": true };
-
   var settings = {
-    prefix:      prefixDefault,
-    isSuspended: false
+    modifier:   "",
+    suspended:  false,
+    sites:      {}
   };
+
 
   // 'globals'
   //var prefixDefault = "Playing ~ ";
@@ -31,6 +27,7 @@ videoDetector = function() {
   var lastPrefix    = currPrefix;
   var isSuspended   = false;
   var siteSuspended = false;
+  var activeSites   = {};
 
   // create observer here so we can access it at different times
   const observer = new MutationObserver(mutationHandler);
@@ -51,6 +48,36 @@ videoDetector = function() {
     // need to make sure that settings are applied prior to initializing player
     initSettings()
       .then(initPlayer);
+  }
+  
+  
+  /*
+   * initSettings()
+   * Apply settings from local storage.
+   */
+  function initSettings() {
+    // return a Promise to make the it possible
+    // to wait for this function's completion (in init())
+    // before doing other init stuff
+    return new Promise((resolve, reject) => {
+      var applySetting = function(pref) {
+        console.log("applying settings");
+        console.log(pref);
+        currPrefix  = pref.modifier   || prefixDefault;
+        isSuspended = pref.suspended  || isSuspended;
+        activeSites = pref.sites      || activeSites;
+        checkSiteStatus(activeSites);
+        console.log(`Applied settings: ${currPrefix}, ${isSuspended}`);
+        console.log(activeSites);
+        resolve("success");
+      };
+
+      console.log("retrieving settings");
+      browser.storage.local.get({ modifier:   currPrefix,
+                                  suspended:  false,
+                                  sites:      activeSites })
+        .then(applySetting, onError);
+    });
   }
 
 
@@ -281,36 +308,6 @@ videoDetector = function() {
     });
   }
 
-  /*
-   * initSettings()
-   * Apply settings from local storage.
-   */
-  function initSettings() {
-    // return a Promise to make the it possible
-    // to wait for this function's completion (in init())
-    // before doing other init stuff
-    return new Promise((resolve, reject) => {
-      var applySetting = function(pref) {
-        console.log("applying settings");
-        console.log(pref);
-        currPrefix  = pref.modifier || prefixDefault;
-        isSuspended = pref.suspended || isSuspended;
-        activeSites = pref.sites || activeSites;
-        checkSiteStatus(activeSites);
-        console.log(`Applied settings: ${currPrefix}, ${isSuspended}`);
-        console.log(activeSites);
-        resolve("success");
-      };
-
-      console.log("retrieving settings");
-      browser.storage.local.get({ modifier: currPrefix,
-                                  suspended: false,
-                                  sites: activeSites })
-        .then(applySetting, onError);
-    });
-  }
-
-
 
   /*
    * onPlayerReload()
@@ -361,22 +358,5 @@ videoDetector = function() {
     }
   }
 
-  /*
-   * handleMessage()
-   * Deal with a message from background script
-   * TODO: remove
-   */
- /* function handleMessage(message) {
-    // handle a message from background script
-    console.log("received message from background");
-    if ("suspend" in message) {
-      isSuspended = message.suspend;
-      if (message.suspend) {
-        setListeners(false);
-      } else {
-        initPlayer();
-      }
-    }
-  } */
 
 }();
