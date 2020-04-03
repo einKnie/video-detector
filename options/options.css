@@ -49,6 +49,7 @@ input[type="checkbox"] {
   background-color: #8d9089;
   border-color:     #4e504c;
   color:            #1f201e;
+  font-size:        large;
 }
 
 .applybutton {

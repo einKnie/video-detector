@@ -35,9 +35,9 @@ function onSuspendClicked() {
 
 
 function onSettingsClicked() {
-  console.log("settings button clicked");
-  
+  console.log("settings button clicked");  
   browser.runtime.sendMessage({settings: true});
+  window.close();
 }
 
 function fetchLocalState() {
