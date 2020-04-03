@@ -13,6 +13,8 @@
  document.getElementById("modifier").addEventListener("change", saveOptions);
  document.querySelector("form").addEventListener('submit', function(e) {e.preventDefault();});
  
+ getVersion();
+ 
  /*
   * Helper to store new settings
   */
@@ -29,6 +31,21 @@
      }
      resolve(newsites);
    });
+ }
+ 
+ /*
+  * Get current addon version from manifest.json
+  */
+ function getVersion() {
+  console.log("bla!");
+  try {
+   var man = browser.runtime.getManifest();
+   if (man.hasOwnProperty("version")) {
+     vd_version = `v${man.version}`;
+   }
+  } catch(e) {
+   console.log(e);
+  }
  }
  
  /*
@@ -81,7 +98,7 @@
      document.getElementById("apptext").textContent    = vd_description;
      document.getElementById("appversion").textContent = vd_version;
    }
- 
+   
    let getting = browser.storage.local.get(["modifier", "sites"]);
    getting.then(setupSettingsPage, onError);
  }

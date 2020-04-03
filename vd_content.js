@@ -9,7 +9,8 @@ videoDetector = function() {
     VIMEO:   "vimeo",
     NETFLIX: "netflix",
     ORF:     "orf",
-    VIVO:    "vivo"
+    VIVO:    "vivo",
+    TWITCH:  "twitch"
   };
 
 
@@ -138,6 +139,16 @@ videoDetector = function() {
       case sites.VIVO: {
         if (document.getElementsByClassName("plyr").length != 0) {
           player = document.querySelector("div[class^='plyr']").querySelector("video");
+        }
+      } break;
+      case sites.TWITCH: {
+        try {
+        if (document.getElementsByClassName("video-player").length != 0) {
+          console.log(document.getElementsByClassName("video-player"));
+          player = document.querySelector("div[class='video-player']").querySelector("video");
+        }
+        } catch(e) {
+          console.log(e);
         }
       } break;
       default: console.log("invalid site");

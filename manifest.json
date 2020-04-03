@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "VideoDetector",
   "author": "einKnie@gmx.at",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Detects if a video is played in a tab and prepends the tab's title with a custom string.",
   
   "applications": {
@@ -37,7 +37,7 @@
 
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*", "*://*.orf.at/*", "*://*.vivo.sx/*"],
+      "matches": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*", "*://*.orf.at/*", "*://*.vivo.sx/*", "*://*.twitch.tv/*"],
       "js": ["vd_content.js"]
     }
   ]
