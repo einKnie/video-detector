@@ -24,18 +24,28 @@ The extension is now installed and active.
 
 The Addon currently supports **youtube.com**, **vimeo.com**, **orf.at**, **vivo.sx**, **twitch.tv**, and **netflix.com**.  
 While the Addon is active, it will monitor any Firefox tabs on a supported site to check if a video is playing.  
-As soon as a video is detected as playing, the title of the repective tab is changed to contain a custom string.
+As soon as a video is detected as playing, the title of the respective tab is changed to contain a custom string.
 The Addon also comes with a toolbar button to quickly suspend and resume the operation, or access the settings page.  
 On this settings page, you can change the custom string as well as disable operation for specific domains.
 
-#### For example:
+##### Example
+By setting the custom string to `"Playing ~ "`
 
     JavaScript Crash Course For Beginners - YouTube
 becomes
 
     Playing ~ JavaScript Crash Course For Beginners - YouTube
 
+The custom string may contain any symbols that the Firefox titlebar can render.  
+That means, standard emojis like 😊 or 🖤 are possible. Additionally, you can specify the positioning of the original video title with _(%title%)_. If no _(%title%)_ attribute is set, the string is prepended to the original title per default.
 
+##### Example
+By setting the custom string to `"(%title%) 🖤"`
+
+	JavaScript Crash Course For Beginners - YouTube
+becomes
+
+	JavaScript Crash Course For Beginners - YouTube 🖤
 ## Bugs
 
 Probably a few.  
