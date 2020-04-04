@@ -1,15 +1,16 @@
 # VideoDetector
 
-This Firefox addon detects when videos are playing and prepends the tab's title with a custom string.  
-The string can be custom set on the addon's preferences page.
+This Firefox Addon detects when videos are playing in a tab and prepends the tab's title with a custom string.  
+The string can be set on the Addon's preferences page.
 
 
 ## Installation
 
-**_This addon is now published._**
-https://addons.mozilla.org/de/firefox/addon/videodetector/
+#### The Easy Way
+ 
+[Get it on the Firefox Addons Page](https://addons.mozilla.org/de/firefox/addon/videodetector/)
 
-
+#### Old Install Instructions
 To install as a temporary Firefox extension:
 
 1. Clone this repo to your machine
@@ -21,26 +22,24 @@ The extension is now installed and active.
 
 ## Usage
 
-The addon currently supports **youtube.com**, **vimeo.com**, **orf.at**, **vivo.sx**, **twitch.tv**, and **netflix.com**.  
-While the addon is active, it will monitor any Firefox tabs on a supported site to detect if a video is playing.  
-As soon as a video starts playing,
-the title of the repective tab is changed to contain a custom string.
-The addon also comes with a toolbar button to quickly suspend and resume the operation, or access the settings page.  
-On this settings page, you can change the custom string as well as disable operation on specific domains.
+The Addon currently supports **youtube.com**, **vimeo.com**, **orf.at**, **vivo.sx**, **twitch.tv**, and **netflix.com**.  
+While the Addon is active, it will monitor any Firefox tabs on a supported site to check if a video is playing.  
+As soon as a video is detected as playing, the title of the repective tab is changed to contain a custom string.
+The Addon also comes with a toolbar button to quickly suspend and resume the operation, or access the settings page.  
+On this settings page, you can change the custom string as well as disable operation for specific domains.
 
 #### For example:
 
-    JavaScript Crash Course For Beginners - YouTube - Mozilla Firefox
+    JavaScript Crash Course For Beginners - YouTube
 becomes
 
-    Playing ~ JavaScript Crash Course For Beginners - YouTube - Mozilla Firefox
+    Playing ~ JavaScript Crash Course For Beginners - YouTube
+
 
 ## Bugs
 
-Probably many.  
-But since this addon does very little overall, the worst that can happen is it may stop until a reload under certain conditions.  
-
-
+Probably a few.  
+But since this Addon does very little overall, the worst that can happen is it may stop doing its thing until a reload under certain conditions.  
 
 Before you lie the very first lines of code I have ever written in JavaScript.
 As such, this project is mostly a learning experience for me.  
