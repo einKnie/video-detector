@@ -16,7 +16,7 @@ videoDetector = function() {
 
   // 'globals'
   var title_mod = "(%title%)";
-  var prefixDefault = "Playing ~ ";
+  var prefixDefault = "Playing ~ " + title_mod;
   var currPrefix    = prefixDefault;
   var lastPrefix    = currPrefix;
   var isSuspended   = false;

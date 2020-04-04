@@ -3,8 +3,9 @@
 (function() {
 
   console.log("background script startup");
-
-  var prefix_default    = "Playing ~ ";
+  
+  var title_mod         = "(%title%)";
+  var prefix_default    = "Playing ~ " + title_mod;
   var suspended_default = false;
 
   // will be filled at script startup, values are gotten from menifest match strings
