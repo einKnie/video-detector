@@ -15,6 +15,7 @@ videoDetector = function() {
 
 
   // 'globals'
+  var title_mod = "(%title%)";
   var prefixDefault = "Playing ~ ";
   var currPrefix    = prefixDefault;
   var lastPrefix    = currPrefix;
@@ -52,7 +53,7 @@ videoDetector = function() {
     // return a Promise to make the it possible
     // to wait for this function's completion (in init())
     // before doing other init stuff
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       var applySetting = function(pref) {
         console.log("applying settings");
         console.log(pref);
@@ -156,27 +157,45 @@ videoDetector = function() {
     return player;
   }
 
-
+  
   /*
-   * setTitle(bool)
-   * Add or remove the current tab's title prefix, depending on parameter
+   * setTitle()
+   * Change the tab's title, depending on 'playing'.
+   * This function takes all possible varations of the 'title string'
    */
   function setTitle(playing) {
+    var origTitle;
+    // first, get the tab's original title
+    // we need to check all possible mod types
+    if (lastPrefix.includes(title_mod)) {
+      // --> we have a title_mod
+      if (lastPrefix.trim().startsWith(title_mod) || lastPrefix.trim().endsWith(title_mod)) {
+        // --> title_mod at start or end of title
+        origTitle = document.title.replace(new RegExp(`(${fixRegex(removePrefixMod(lastPrefix))})`, "g"), "");
+      } else {
+        // --> we have a title_mod in the middle of the title
+        var arr = lastPrefix.trim().split(/(\(%)|(%\))/g);
+        origTitle = document.title.replace(new RegExp(`(${fixRegex(arr[0])})|(${fixRegex(arr[arr.length - 1])})`, "g"), "");
+      }
+
+    } else {
+      // --> we have a regular prefix
+      origTitle = document.title.replace(new RegExp(`(${fixRegex(currPrefix)})|(${fixRegex(lastPrefix)})`, "g"), "");
+    }
+    
+    // finally, set the tabs title
     if (playing) {
-      if (!document.title.startsWith(currPrefix) && !document.title.startsWith(lastPrefix)) {
-        document.title = currPrefix + document.title;
-      } else if (document.title.startsWith(lastPrefix)) {
-        document.title = document.title.replace(lastPrefix, currPrefix);
+      if (currPrefix.includes(title_mod)) {
+        document.title = currPrefix.replace(title_mod, origTitle);
+      } else {
+        document.title = currPrefix + origTitle;
       }
     } else {
-      var re = RegExp(`^(${fixRegex(currPrefix)})|^(${fixRegex(lastPrefix)})`, "g");
-      if (re.exec(document.title) != null) {
-        document.title = document.title.replace(re, "");
+        document.title = origTitle;
       }
-    }
     lastPrefix = currPrefix;
   }
-
+  
 
   /*
    * getSite(string)
@@ -204,6 +223,7 @@ videoDetector = function() {
       if (on) {
         player.addEventListener("pause", onPause);
         player.addEventListener("play", onPlay);
+        player.addEventListener("ended", onPause);
         player.addEventListener("loadeddata", onPlayerReload);
         setPlayerChangeHandler(true);
         console.log("Set status listeners");
@@ -214,6 +234,7 @@ videoDetector = function() {
       } else {
         player.removeEventListener("pause", onPause);
         player.removeEventListener("play", onPlay);
+        player.removeEventListener("ended", onPause);
         player.removeEventListener("loadeddata", onPlayerReload);
         setPlayerChangeHandler(false);
         console.log("Disconnected status listeners");
@@ -231,6 +252,15 @@ videoDetector = function() {
    */
   function fixRegex(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  
+  
+  /*
+   * removePrefixMod(str)
+   * remove the title modficator from a string
+   */
+  function removePrefixMod(str) {
+    return str.replace(title_mod, "").trim();
   }
 
 
