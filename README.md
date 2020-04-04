@@ -6,7 +6,9 @@ The string can be custom set on the addon's preferences page.
 
 ## Installation
 
-**_This addon is not published._**
+**_This addon is now published._**
+https://addons.mozilla.org/de/firefox/addon/videodetector/
+
 
 To install as a temporary Firefox extension:
 
