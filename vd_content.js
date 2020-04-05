@@ -15,19 +15,20 @@ videoDetector = function() {
 
 
   // 'globals'
-  var title_mod = "(%title%)";
-  var prefixDefault = "Playing ~ " + title_mod;
-  var currPrefix    = prefixDefault;
-  var lastPrefix    = currPrefix;
-  var isSuspended   = false;
-  var siteSuspended = false;
-  var activeSites   = {};
+  // these could well be addon-global. maybe turn them into a 'config' module?
+  var g_titleMod      = "(%title%)";
+  var g_prefixDefault = "Playing ~ " + g_titleMod;
+  var g_currPrefix    = g_prefixDefault;
+  var g_lastPrefix    = g_currPrefix;
+  var g_isSuspended   = false;
+  var g_siteSuspended = false;
+  var g_activeSites   = {};
 
+  // site-global 'globals'
+  // these differ in each tab
   // create observer here so we can access it at different times
-  const observer = new MutationObserver(mutationHandler);
-
-  // video player object
-  var player = null;
+  const g_observer = new MutationObserver(mutationHandler);
+  var   g_player   = null;
 
   // start script execution
   init();
@@ -54,22 +55,21 @@ videoDetector = function() {
     // to wait for this function's completion (in init())
     // before doing other init stuff
     return new Promise((resolve) => {
-      var applySetting = function(pref) {
+      function applySetting(pref) {
         console.log("applying settings");
         console.log(pref);
-        currPrefix  = pref.modifier   || prefixDefault;
-        isSuspended = pref.suspended  || isSuspended;
-        activeSites = pref.sites      || activeSites;
-        checkSiteStatus(activeSites);
-        console.log(`Applied settings: ${currPrefix}, ${isSuspended}`);
-        console.log(activeSites);
+        g_currPrefix  = pref.modifier   || g_prefixDefault;
+        g_isSuspended = pref.suspended  || g_isSuspended;
+        g_activeSites = pref.sites      || g_activeSites;
+        checkSiteStatus(g_activeSites);
+        console.log(`Applied settings: ${g_currPrefix}, ${g_isSuspended}`);
+        console.log(g_activeSites);
         resolve("success");
-      };
+      }
 
-      console.log("retrieving settings");
-      browser.storage.local.get({ modifier:   currPrefix,
+      browser.storage.local.get({ modifier:   g_currPrefix,
                                   suspended:  false,
-                                  sites:      activeSites })
+                                  sites:      g_activeSites })
         .then(applySetting, onError);
     });
   }
@@ -77,24 +77,17 @@ videoDetector = function() {
 
   /*
    * initPlayer()
-   * Check if a player exists on site.
-   * Function reschedules itself periodically until a player is found.
+   * Check if a g_player exists on site.
+   * Function reschedules itself periodically until a g_player is found.
    * @TODO: rethink this concept. could this be event-based?
    */
   function initPlayer() {
-    console.log("checking player status...");
-
-    if (player != null) {
-      // cleanup old player
-      console.log("Cleaning up old player");
-      setListeners(false);
-      player = null;
-    }
-
-    player = getPlayer();
-    if (player != null) {
-      console.log("player found");
-      if (!isSuspended && !siteSuspended) {
+    console.log("checking g_player status...");
+    g_player = getPlayer();
+    
+    if (g_player != null) {
+      console.log("g_player found");
+      if (!g_isSuspended && !g_siteSuspended) {
         setListeners(true);
       }
     } else {
@@ -108,45 +101,44 @@ videoDetector = function() {
    * Return the current video player object, or null if none is found
    */
   function getPlayer() {
-    console.log("in getPlayer()");
-    if (player != null) {
-      // cleanup old player
+    if (g_player != null) {
+      // cleanup old g_player
       console.log("Cleaning up old player");
       setListeners(false);
-      player = null;
+      g_player = null;
     }
 
     switch (getSite(document.URL)) {
       case sites.YOUTUBE: {
         if (document.getElementById("movie_player") != null) {
-          player = document.getElementById("movie_player").querySelector("video");
+          g_player = document.getElementById("movie_player").querySelector("video");
         }
       } break;
       case sites.VIMEO: {
         if (document.getElementsByClassName("vp-controls-wrapper").length != 0) {
-          player = document.querySelector("div[class^='player']").querySelector("video");
+          g_player = document.querySelector("div[class^='player']").querySelector("video");
         }
       } break;
       case sites.NETFLIX: {
         if (document.getElementsByClassName("PlayerControlsNeo__button-control-row").length != 0) {
-          player = document.querySelector("div[class^='VideoContainer']").querySelector("video");
+          g_player = document.querySelector("div[class^='VideoContainer']").querySelector("video");
         }
       } break;
       case sites.ORF: {
         if (document.getElementsByClassName("video_wrapper").length != 0) {
-          player = document.querySelector("div[class^='video_wrapper']").querySelector("video");
+          g_player = document.querySelector("div[class^='video_wrapper']").querySelector("video");
         }
       } break;
       case sites.VIVO: {
         if (document.getElementsByClassName("plyr").length != 0) {
-          player = document.querySelector("div[class^='plyr']").querySelector("video");
+          g_player = document.querySelector("div[class^='plyr']").querySelector("video");
         }
       } break;
       case sites.TWITCH: {
         try {
         if (document.getElementsByClassName("video-player").length != 0) {
           console.log(document.getElementsByClassName("video-player"));
-          player = document.querySelector("div[class='video-player']").querySelector("video");
+          g_player = document.querySelector("div[class='video-player']").querySelector("video");
         }
         } catch(e) {
           console.log(e);
@@ -154,7 +146,7 @@ videoDetector = function() {
       } break;
       default: console.log("invalid site");
     }
-    return player;
+    return g_player;
   }
 
   
@@ -167,33 +159,33 @@ videoDetector = function() {
     var origTitle;
     // first, get the tab's original title
     // we need to check all possible mod types
-    if (lastPrefix.includes(title_mod)) {
-      // --> we have a title_mod
-      if (lastPrefix.trim().startsWith(title_mod) || lastPrefix.trim().endsWith(title_mod)) {
-        // --> title_mod at start or end of title
-        origTitle = document.title.replace(new RegExp(`(${fixRegex(removePrefixMod(lastPrefix))})`, "g"), "");
+    if (g_lastPrefix.includes(g_titleMod)) {
+      // --> we have a g_titleMod
+      if (g_lastPrefix.trim().startsWith(g_titleMod) || g_lastPrefix.trim().endsWith(g_titleMod)) {
+        // --> g_titleMod at start or end of title
+        origTitle = document.title.replace(new RegExp(`(${fixRegex(removePrefixMod(g_lastPrefix))})`, "g"), "");
       } else {
-        // --> we have a title_mod in the middle of the title
-        var arr = lastPrefix.trim().split(/(\(%)|(%\))/g);
+        // --> we have a g_titleMod in the middle of the title
+        var arr = g_lastPrefix.trim().split(/(\(%)|(%\))/g);
         origTitle = document.title.replace(new RegExp(`(${fixRegex(arr[0])})|(${fixRegex(arr[arr.length - 1])})`, "g"), "");
       }
-
     } else {
       // --> we have a regular prefix
-      origTitle = document.title.replace(new RegExp(`(${fixRegex(currPrefix)})|(${fixRegex(lastPrefix)})`, "g"), "");
+      origTitle = document.title.replace(new RegExp(`(${fixRegex(g_currPrefix)})|(${fixRegex(g_lastPrefix)})`, "g"), "");
     }
     
     // finally, set the tabs title
     if (playing) {
-      if (currPrefix.includes(title_mod)) {
-        document.title = currPrefix.replace(title_mod, origTitle);
+      if (g_currPrefix.includes(g_titleMod)) {
+        document.title = g_currPrefix.replace(g_titleMod, origTitle);
       } else {
-        document.title = currPrefix + origTitle;
+        document.title = g_currPrefix + origTitle;
       }
     } else {
-        document.title = origTitle;
-      }
-    lastPrefix = currPrefix;
+      document.title = origTitle;
+    }
+
+    g_lastPrefix = g_currPrefix;
   }
   
 
@@ -219,26 +211,26 @@ videoDetector = function() {
    */
   function setListeners(on) {
     // install listeners for video play/paused
-    if (player != null) {
+    if (g_player != null) {
       if (on) {
-        player.addEventListener("pause", onPause);
-        player.addEventListener("play", onPlay);
-        player.addEventListener("ended", onPause);
-        player.addEventListener("loadeddata", onPlayerReload);
+        g_player.addEventListener("pause", onPause);
+        g_player.addEventListener("play", onPlay);
+        g_player.addEventListener("ended", onPause);
+        g_player.addEventListener("loadeddata", onPlayerReload);
         setPlayerChangeHandler(true);
         console.log("Set status listeners");
-        if (!player.paused) {
+        if (!g_player.paused) {
           // if player is already running
           onPlay();
         }
       } else {
-        player.removeEventListener("pause", onPause);
-        player.removeEventListener("play", onPlay);
-        player.removeEventListener("ended", onPause);
-        player.removeEventListener("loadeddata", onPlayerReload);
+        g_player.removeEventListener("pause", onPause);
+        g_player.removeEventListener("play", onPlay);
+        g_player.removeEventListener("ended", onPause);
+        g_player.removeEventListener("loadeddata", onPlayerReload);
         setPlayerChangeHandler(false);
         console.log("Disconnected status listeners");
-        if (!player.paused) {
+        if (!g_player.paused) {
           setTitle(false);
         }
       }
@@ -260,7 +252,7 @@ videoDetector = function() {
    * remove the title modficator from a string
    */
   function removePrefixMod(str) {
-    return str.replace(title_mod, "").trim();
+    return str.replace(g_titleMod, "").trim();
   }
 
 
@@ -303,15 +295,11 @@ videoDetector = function() {
     browser.storage.local.get(["modifier", "suspended", "sites"])
       .then(function(pref) {
         console.log(pref);
-        if (pref.modifier) {
-          currPrefix = pref.modifier;
-        } else {
-          // no modifier found
-          currPrefix = prefixDefault;
-        }
-        isSuspended = pref.suspended;
+        g_currPrefix  = pref.modifier  || g_prefixDefault;
+        g_isSuspended = pref.suspended || false;
         checkSiteStatus(pref.sites);
-        if (siteSuspended || isSuspended) {
+        
+        if (g_siteSuspended || g_isSuspended) {
           setListeners(false);
         } else {
           initPlayer();
@@ -328,7 +316,7 @@ videoDetector = function() {
     Object.getOwnPropertyNames(sites).forEach(function(val) {
       if (document.URL.includes(val)) {
         console.log("found own site");
-        siteSuspended = !sites[val];
+        g_siteSuspended = !sites[val];
       }
     });
   }
@@ -342,7 +330,7 @@ videoDetector = function() {
    * @TODO: check if there is a way to catch event on when title is set.
    */
   function onPlayerReload() {
-    if ((player != null) && !player.paused) {
+    if ((g_player != null) && !g_player.paused) {
       console.log("autostart detected");
       setTimeout(onPlay, 1000); // hacky hack: site name might not be fully loaded when video is loaded, wait a bit
     }
@@ -352,7 +340,7 @@ videoDetector = function() {
   /*
    * mutationHandler()
    * Handle a mutation event.
-   * In case the player's src attribute has changed, reinit the player by calling initPlayer.
+   * In case the g_player's src attribute has changed, reinit the g_player by calling initPlayer.
    */
   function mutationHandler(mutationList) {
     console.log("data mutation observed!");
@@ -368,20 +356,20 @@ videoDetector = function() {
 
 
   /*
-   * setPlayerChangedHandler()
-   * Set up event handler for current player
-   * to trigger when the player's attributes have changed.
+   * setg_playerChangedHandler()
+   * Set up event handler for current g_player
+   * to trigger when the g_player's attributes have changed.
    */
   function setPlayerChangeHandler(start) {
     if (start) {
-      if (player == null) {
+      if (g_player == null) {
         return;
       }
-      observer.observe(player, { attributeFilter: ["src"] });
+      g_observer.observe(g_player, { attributeFilter: ["src"] });
     } else {
-      observer.disconnect();
+      g_observer.disconnect();
     }
   }
-
+  
 
 }();

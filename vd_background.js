@@ -4,12 +4,17 @@
 
   console.log("background script startup");
   
-  var title_mod         = "(%title%)";
-  var prefix_default    = "Playing ~ " + title_mod;
-  var suspended_default = false;
+  // base settings
+  var g_titleMod         = "(%title%)";
+  var g_prefixDefault    = "Playing ~ " + g_titleMod;
+  var g_suspendedDefault = false;
+  
+  // handling the settings page
+  var g_lastTabId = null;
+  var g_optionsURL = "options/options.html";
 
   // will be filled at script startup, values are gotten from menifest match strings
-  var activeSites = {};
+  var g_activeSites = {};
 
   browser.runtime.onMessage.addListener(handleMessage);
   getSupportedSites()
@@ -28,7 +33,7 @@
           for (var site in obj.matches) {
             if (obj.matches.hasOwnProperty(site)) {
               var sitename = obj.matches[site].replace(/^\*:\/\/\*\.(\w+\.\w+)[\*\/]*$/g, '$1');
-              activeSites[sitename] = true;
+              g_activeSites[sitename] = true;
             }
           }
           resolve("yay");
@@ -48,9 +53,9 @@
       browser.storage.local.get(["modifier", "suspended", "sites"])
         .then(function(pref) {
           var newPrefs = {
-            modifier:   pref.modifier  || prefix_default,
-            suspended:  pref.suspended || suspended_default,
-            sites:      pref.sites     || activeSites
+            modifier:   pref.modifier  || g_prefixDefault,
+            suspended:  pref.suspended || g_suspendedDefault,
+            sites:      pref.sites     || g_activeSites
           };
           console.log(newPrefs);
           browser.storage.local.set(newPrefs);
@@ -95,24 +100,62 @@
       reject("Failed to get current tab");
     });
   }
+  
+  
+  /*
+   * isSettingsOpen()
+   * Return true if a settings page is already open in the current active window
+   * else false.
+   */
+  function isSettingsOpen(winInfo) {
+    var views = browser.extension.getViews({type: "tab", windowId: winInfo.windowId});
+    console.log(views);
+    for (var win of views) {
+      if (win.location.href.includes(g_optionsURL)) {
+        // switch to tab instead of open
+        console.log("settings page found");
+        console.log(win);
+        return true;
+      }
+    }
+    return false;
+  }
 
   
   /*
    * openSettingsPage()
-   * Open a new tab with the Addon's setting page
+   * Open a new tab with the Addon's setting page.
+   * If a setings page is found to be open already, it is closed.
+   * TODO: see if there is a better way to do this
    */
   function openSettingsPage() {
-    // open new tab with settings page next to current tab
+    try{
+    
     var winid = browser.windows.getCurrent({populate: true});
-    winid.then(getCurrentTab, onError).then(function(index) {
-      var tabcfg = {
-        active: true,
-        index: index + 1, 
-        url: "options/options.html"
-      };
-      browser.tabs.create(tabcfg)
-        .then(function() { console.log("yay");}, onError);
-    }, onError);
+      // close settings tab, if open
+      winid.then(isSettingsOpen)
+        .then(function(res) {
+          if (res == true) {
+            console.log("closing");
+            browser.tabs.remove([g_lastTabId]);
+          }
+        });
+      // in parallel
+      // open new settings tab next to current tab
+      winid.then(getCurrentTab)
+        .then(function(index) {
+          var tabcfg = {
+            active: true,
+            index: index + 1, 
+            url:   g_optionsURL
+          };
+          browser.tabs.create(tabcfg)
+            .then(function(tab) {
+              g_lastTabId = tab.id;
+            }, onError);
+        }, onError);
+      
+    } catch(e) { console.log(e); }
   }
 
 })();
