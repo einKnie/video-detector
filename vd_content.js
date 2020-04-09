@@ -1,5 +1,5 @@
-// This should check whether a video is currently played and change the title accordingly
-// @TODO: fix suspend setting propagation: find _one_ way to do this, and the stick to that.
+// Content script runs on supported sites and watches video player for changes
+
 
 videoDetector = function() {
 
@@ -16,8 +16,8 @@ videoDetector = function() {
 
   // 'globals'
   // these could well be addon-global. maybe turn them into a 'config' module?
-  var g_titleMod      = "(%title%)";
-  var g_prefixDefault = "Playing ~ " + g_titleMod;
+  const g_titleMod      = "(%title%)";
+  const g_prefixDefault = "Playing ~ " + g_titleMod;
   var g_currPrefix    = g_prefixDefault;
   var g_lastPrefix    = g_currPrefix;
   var g_isSuspended   = false;
@@ -44,8 +44,8 @@ videoDetector = function() {
     initSettings()
       .then(initPlayer);
   }
-  
-  
+
+
   /*
    * initSettings()
    * Apply settings from local storage.
@@ -56,14 +56,10 @@ videoDetector = function() {
     // before doing other init stuff
     return new Promise((resolve) => {
       function applySetting(pref) {
-        console.log("applying settings");
-        console.log(pref);
         g_currPrefix  = pref.modifier   || g_prefixDefault;
         g_isSuspended = pref.suspended  || g_isSuspended;
         g_activeSites = pref.sites      || g_activeSites;
         checkSiteStatus(g_activeSites);
-        console.log(`Applied settings: ${g_currPrefix}, ${g_isSuspended}`);
-        console.log(g_activeSites);
         resolve("success");
       }
 
@@ -82,11 +78,10 @@ videoDetector = function() {
    * @TODO: rethink this concept. could this be event-based?
    */
   function initPlayer() {
-    console.log("checking g_player status...");
     g_player = getPlayer();
-    
+
     if (g_player != null) {
-      console.log("g_player found");
+      console.log("player found");
       if (!g_isSuspended && !g_siteSuspended) {
         setListeners(true);
       }
@@ -103,7 +98,6 @@ videoDetector = function() {
   function getPlayer() {
     if (g_player != null) {
       // cleanup old g_player
-      console.log("Cleaning up old player");
       setListeners(false);
       g_player = null;
     }
@@ -149,31 +143,35 @@ videoDetector = function() {
     return g_player;
   }
 
-  
+
   /*
    * setTitle()
    * Change the tab's title, depending on 'playing'.
    * This function takes all possible varations of the 'title string'
    */
   function setTitle(playing) {
-    var origTitle;
+    let origTitle;
     // first, get the tab's original title
     // we need to check all possible mod types
     if (g_lastPrefix.includes(g_titleMod)) {
+
       // --> we have a g_titleMod
       if (g_lastPrefix.trim().startsWith(g_titleMod) || g_lastPrefix.trim().endsWith(g_titleMod)) {
+        
         // --> g_titleMod at start or end of title
         origTitle = document.title.replace(new RegExp(`(${fixRegex(removePrefixMod(g_lastPrefix))})`, "g"), "");
       } else {
+        
         // --> we have a g_titleMod in the middle of the title
         var arr = g_lastPrefix.trim().split(/(\(%)|(%\))/g);
         origTitle = document.title.replace(new RegExp(`(${fixRegex(arr[0])})|(${fixRegex(arr[arr.length - 1])})`, "g"), "");
       }
     } else {
+      
       // --> we have a regular prefix
       origTitle = document.title.replace(new RegExp(`(${fixRegex(g_currPrefix)})|(${fixRegex(g_lastPrefix)})`, "g"), "");
     }
-    
+
     // finally, set the tabs title
     if (playing) {
       if (g_currPrefix.includes(g_titleMod)) {
@@ -184,10 +182,11 @@ videoDetector = function() {
     } else {
       document.title = origTitle;
     }
-
+    
+    // store prefix
     g_lastPrefix = g_currPrefix;
   }
-  
+
 
   /*
    * getSite(string)
@@ -218,7 +217,6 @@ videoDetector = function() {
         g_player.addEventListener("ended", onPause);
         g_player.addEventListener("loadeddata", onPlayerReload);
         setPlayerChangeHandler(true);
-        console.log("Set status listeners");
         if (!g_player.paused) {
           // if player is already running
           onPlay();
@@ -229,7 +227,6 @@ videoDetector = function() {
         g_player.removeEventListener("ended", onPause);
         g_player.removeEventListener("loadeddata", onPlayerReload);
         setPlayerChangeHandler(false);
-        console.log("Disconnected status listeners");
         if (!g_player.paused) {
           setTitle(false);
         }
@@ -240,13 +237,13 @@ videoDetector = function() {
 
   /*
    * fixRegex()
-   * Return a rexeg-friendly version of the given string 
+   * Return a rexeg-friendly version of the given string
    */
   function fixRegex(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
-  
-  
+
+
   /*
    * removePrefixMod(str)
    * remove the title modficator from a string
@@ -266,7 +263,6 @@ videoDetector = function() {
    * Callback handler for video player pause event.
    */
   function onPause() {
-    console.log("video paused");
     setTitle(false);
   }
 
@@ -276,7 +272,6 @@ videoDetector = function() {
    * Callback handler for video player play event.
    */
   function onPlay() {
-    console.log("video playing");
     setTitle(true);
   }
 
@@ -291,14 +286,13 @@ videoDetector = function() {
    * Event handler for settings changes event.
    */
   function onSettingChanged() {
-    console.log("preferences changed");
     browser.storage.local.get(["modifier", "suspended", "sites"])
       .then(function(pref) {
         console.log(pref);
         g_currPrefix  = pref.modifier  || g_prefixDefault;
         g_isSuspended = pref.suspended || false;
         checkSiteStatus(pref.sites);
-        
+
         if (g_siteSuspended || g_isSuspended) {
           setListeners(false);
         } else {
@@ -306,8 +300,8 @@ videoDetector = function() {
         }
       }, onError);
   }
-  
-  
+
+
   /*
    * checkSiteStatus()
    * Check if current site is suspended
@@ -315,7 +309,6 @@ videoDetector = function() {
   function checkSiteStatus(sites) {
     Object.getOwnPropertyNames(sites).forEach(function(val) {
       if (document.URL.includes(val)) {
-        console.log("found own site");
         g_siteSuspended = !sites[val];
       }
     });
@@ -331,7 +324,6 @@ videoDetector = function() {
    */
   function onPlayerReload() {
     if ((g_player != null) && !g_player.paused) {
-      console.log("autostart detected");
       setTimeout(onPlay, 1000); // hacky hack: site name might not be fully loaded when video is loaded, wait a bit
     }
   }
@@ -343,7 +335,6 @@ videoDetector = function() {
    * In case the g_player's src attribute has changed, reinit the g_player by calling initPlayer.
    */
   function mutationHandler(mutationList) {
-    console.log("data mutation observed!");
 
     for (let mutation of mutationList) {
       if (mutation.type == "attributes") {
@@ -370,6 +361,6 @@ videoDetector = function() {
       g_observer.disconnect();
     }
   }
-  
+
 
 }();

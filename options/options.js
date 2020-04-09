@@ -37,15 +37,10 @@
   * Get current addon version from manifest.json
   */
  function getVersion() {
-  console.log("bla!");
-  try {
    var man = browser.runtime.getManifest();
    if (man.hasOwnProperty("version")) {
      vd_version = `v${man.version}`;
    }
-  } catch(e) {
-   console.log(e);
-  }
  }
  
  /*
@@ -54,7 +49,6 @@
  function saveOptions(e) {
    e.preventDefault();
    // check if any sites have been enabled/disabled
-   console.log("storing data");
    var newSites = browser.storage.local.get("sites");
    newSites.then(fetchSettings, onError).then(function(result) {
        return new Promise((resolve, reject) => {
@@ -70,9 +64,8 @@
   * Apply current options to settings page
   */
  function restoreOptions() {
-   
+
    function setupSettingsPage(result) {
-     console.log(result);
      var buttons = document.getElementById("sitebuttons");
      Object.getOwnPropertyNames(result.sites).forEach(function(val) {
        if (buttons.querySelector(`input[id="${val}"]`) != null) {
@@ -93,6 +86,7 @@
          buttons.appendChild(elem);
        }
      });
+
      // pre-fill titlePrefix field with the current set prefix
      document.getElementById("modifier").value         = result.modifier || mod_default;
      document.getElementById("apptext").textContent    = vd_description;
