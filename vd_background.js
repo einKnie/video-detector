@@ -5,6 +5,14 @@
   // TODO: not finished
   // browser.runtime.onInstalled.addListener(showOnboarding);
 
+  const DEBUG = true;
+  var logDebug;
+  if (DEBUG) {
+    logDebug = console.log;
+  } else {
+    logDebug = { };
+  }
+
   // base settings
   const g_titleMod         = "(%title%)";
   const g_prefixDefault    = "▶️ " + g_titleMod;
@@ -69,8 +77,8 @@
 
   // TODO: not finished
   async function showOnboarding(reason) {
-    console.log(reason.reason);
-    console.log(reason.temporary);
+    logDebug(reason.reason);
+    logDebug(reason.temporary);
     switch (reason.reason) {
       case "install": {
         const url = browser.runtime.getURL("views/onboard.html");
@@ -86,6 +94,7 @@
    * Deal with an incoming message from the toolbar button
    */
   function handleMessage(message) {
+    logDebug("message received");
     if ("settings" in message) {
       openSettingsPage();
     }

@@ -1,7 +1,14 @@
 // Content script runs on supported sites and watches video player for changes
 
-
 videoDetector = function() {
+  
+  const DEBUG = true;
+  var logDebug;
+  if (DEBUG) {
+    logDebug = console.log;
+  } else {
+    logDebug = { };
+  }
 
   // supported websites
   const sites = {
@@ -28,6 +35,11 @@ videoDetector = function() {
   // these differ in each tab
   // create observer here so we can access it at different times
   const g_observer = new MutationObserver(mutationHandler);
+
+  // set MutationObserver for title (youtube-specific; youtube resets title when an ad was supposed to play)
+  const g_titleObs = new MutationObserver(titleMutationHandler);
+  g_titleObs.observe(document.querySelector('title'), { childList: true });
+ 
   var   g_player   = null;
 
   // start script execution
@@ -38,7 +50,7 @@ videoDetector = function() {
    * Initialize script
    */
   function init() {
-    console.log("Starting content script");
+    logDebug("Starting content script");
     browser.storage.onChanged.addListener(onSettingChanged);
     // need to make sure that settings are applied prior to initializing player
     initSettings()
@@ -73,15 +85,15 @@ videoDetector = function() {
 
   /*
    * initPlayer()
-   * Check if a g_player exists on site.
-   * Function reschedules itself periodically until a g_player is found.
+   * Check if a player exists on site.
+   * Function reschedules itself periodically until a player is found.
    * @TODO: rethink this concept. could this be event-based?
    */
   function initPlayer() {
     g_player = getPlayer();
 
     if (g_player != null) {
-      console.log("player found");
+      logDebug("player found");
       if (!g_isSuspended && !g_siteSuspended) {
         setListeners(true);
       }
@@ -97,7 +109,7 @@ videoDetector = function() {
    */
   function getPlayer() {
     if (g_player != null) {
-      // cleanup old g_player
+      // cleanup old player
       setListeners(false);
       g_player = null;
     }
@@ -129,16 +141,11 @@ videoDetector = function() {
         }
       } break;
       case sites.TWITCH: {
-        try {
         if (document.getElementsByClassName("video-player").length != 0) {
-          console.log(document.getElementsByClassName("video-player"));
           g_player = document.querySelector("div[class='video-player']").querySelector("video");
         }
-        } catch(e) {
-          console.log(e);
-        }
       } break;
-      default: console.log("invalid site");
+      default: logDebug("invalid site");
     }
     return g_player;
   }
@@ -147,7 +154,7 @@ videoDetector = function() {
   /*
    * setTitle()
    * Change the tab's title, depending on 'playing'.
-   * This function takes all possible varations of the 'title string'
+   * This function takes all possible variations of the 'title string'
    */
   function setTitle(playing) {
     let origTitle;
@@ -155,14 +162,14 @@ videoDetector = function() {
     // we need to check all possible mod types
     if (g_lastPrefix.includes(g_titleMod)) {
 
-      // --> we have a g_titleMod
+      // --> we have a titleMod
       if (g_lastPrefix.trim().startsWith(g_titleMod) || g_lastPrefix.trim().endsWith(g_titleMod)) {
         
-        // --> g_titleMod at start or end of title
+        // --> titleMod at start or end of title
         origTitle = document.title.replace(new RegExp(`(${fixRegex(removePrefixMod(g_lastPrefix))})`, "g"), "");
       } else {
         
-        // --> we have a g_titleMod in the middle of the title
+        // --> we have a titleMod in the middle of the title
         var arr = g_lastPrefix.trim().split(/(\(%)|(%\))/g);
         origTitle = document.title.replace(new RegExp(`(${fixRegex(arr[0])})|(${fixRegex(arr[arr.length - 1])})`, "g"), "");
       }
@@ -174,12 +181,14 @@ videoDetector = function() {
 
     // finally, set the tabs title
     if (playing) {
+      logDebug("Setting title");
       if (g_currPrefix.includes(g_titleMod)) {
         document.title = g_currPrefix.replace(g_titleMod, origTitle);
       } else {
         document.title = g_currPrefix + origTitle;
       }
     } else {
+      logDebug("Unsetting title");
       document.title = origTitle;
     }
     
@@ -212,6 +221,7 @@ videoDetector = function() {
     // install listeners for video play/paused
     if (g_player != null) {
       if (on) {
+        logDebug("Registering listeners");
         g_player.addEventListener("pause", onPause);
         g_player.addEventListener("play", onPlay);
         g_player.addEventListener("ended", onPause);
@@ -219,9 +229,10 @@ videoDetector = function() {
         setPlayerChangeHandler(true);
         if (!g_player.paused) {
           // if player is already running
-          onPlay();
+          setTitle(true); 
         }
       } else {
+        logDebug("Unregistering listeners");
         g_player.removeEventListener("pause", onPause);
         g_player.removeEventListener("play", onPlay);
         g_player.removeEventListener("ended", onPause);
@@ -250,6 +261,14 @@ videoDetector = function() {
    */
   function removePrefixMod(str) {
     return str.replace(g_titleMod, "").trim();
+  }
+
+  /*
+   * isTitleNeeded()
+   * Check if the basic prerequisites for setting title prefix are met
+   */
+  function isTitleNeeded() {
+    return (g_player && !g_player.paused && !(g_siteSuspended || g_isSuspended));
   }
 
 
@@ -286,9 +305,10 @@ videoDetector = function() {
    * Event handler for settings changes event.
    */
   function onSettingChanged() {
+    logDebug("Settings have changed!");
     browser.storage.local.get(["modifier", "suspended", "sites"])
       .then(function(pref) {
-        console.log(pref);
+        logDebug(pref);
         g_currPrefix  = pref.modifier  || g_prefixDefault;
         g_isSuspended = pref.suspended || false;
         checkSiteStatus(pref.sites);
@@ -296,7 +316,7 @@ videoDetector = function() {
         if (g_siteSuspended || g_isSuspended) {
           setListeners(false);
         } else {
-          initPlayer();
+          setListeners(true);
         }
       }, onError);
   }
@@ -324,6 +344,7 @@ videoDetector = function() {
    */
   function onPlayerReload() {
     if ((g_player != null) && !g_player.paused) {
+      logDebug("player reloading");
       setTimeout(onPlay, 1000); // hacky hack: site name might not be fully loaded when video is loaded, wait a bit
     }
   }
@@ -332,24 +353,47 @@ videoDetector = function() {
   /*
    * mutationHandler()
    * Handle a mutation event.
-   * In case the g_player's src attribute has changed, reinit the g_player by calling initPlayer.
+   * In case the player's src attribute has changed, reinit the player by calling initPlayer.
    */
   function mutationHandler(mutationList) {
 
     for (let mutation of mutationList) {
+      logDebug(`mutation observed: type: ${mutation.type}, name: ${mutation.attributeName}`);
       if (mutation.type == "attributes") {
         if (mutation.attributeName == "src") {
+          logDebug("mutation observed");
           initPlayer();
         }
       }
     }
   }
-
+  
+  /*
+   * titleMutationHandler()
+   * Handler for observes page title changes.
+   * Youtube keeps resetting the title whenever ads are scheduled, even if they are blocked.
+   * This handler is used to detect theses changes and set the title again
+   */
+  function titleMutationHandler(mutationList) {
+    for (let mutation of mutationList) {
+      if (DEBUG) {
+        let msg = "Title mutation observed";
+        if (g_player != null) {
+          msg += ` at time ${g_player.currentTime / 60} m`;
+        }
+        logDebug(msg);
+      }
+      if (isTitleNeeded() && !document.title.includes(removePrefixMod(g_currPrefix))) {
+        logDebug("resetting title");
+        setTitle(true);
+      }
+    }
+  }
 
   /*
    * setg_playerChangedHandler()
-   * Set up event handler for current g_player
-   * to trigger when the g_player's attributes have changed.
+   * Set up event handler for current player
+   * to trigger when the player's attributes have changed.
    */
   function setPlayerChangeHandler(start) {
     if (start) {
