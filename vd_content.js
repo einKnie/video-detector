@@ -37,12 +37,14 @@ videoDetector = function() {
   const g_observer = new MutationObserver(mutationHandler);
 
   // set MutationObserver for title (youtube-specific; youtube resets title when an ad was supposed to play)
+  // FIXME: this breaks youtube when no ad blocker is installed
   const g_titleObs = new MutationObserver(titleMutationHandler);
-  g_titleObs.observe(document.querySelector('title'), { childList: true });
+  //g_titleObs.observe(document.querySelector('title'), { childList: true });
  
   var   g_player   = null;
 
   // start script execution
+  //window.addEventListener("load", init);
   init();
 
   /*
@@ -114,7 +116,7 @@ videoDetector = function() {
       g_player = null;
     }
 
-    switch (getSite(document.URL)) {
+    switch (getSite()) {
       case sites.YOUTUBE: {
         if (document.getElementById("movie_player") != null) {
           g_player = document.getElementById("movie_player").querySelector("video");
@@ -141,12 +143,15 @@ videoDetector = function() {
         }
       } break;
       case sites.TWITCH: {
-        if (document.getElementsByClassName("video-player").length != 0) {
+        if (document.querySelector("[class='video-player'][data-a-player-type='site']") != null) {
           g_player = document.querySelector("div[class='video-player']").querySelector("video");
         }
       } break;
+     
       default: logDebug("invalid site");
     }
+    if (g_player)
+      logDebug(g_player);
     return g_player;
   }
 
@@ -194,6 +199,7 @@ videoDetector = function() {
     
     // store prefix
     g_lastPrefix = g_currPrefix;
+    g_titleObs.observe(document.querySelector('title'), { childList: true });
   }
 
 
@@ -201,7 +207,8 @@ videoDetector = function() {
    * getSite(string)
    * Return the name of the site, or 'other' if the site is not supported
    */
-  function getSite(url) {
+  function getSite() {
+    let url = document.URL;
     for (let site in sites) {
       if (sites.hasOwnProperty(site)) {
         if (url.includes(sites[site])) {
@@ -226,7 +233,7 @@ videoDetector = function() {
         g_player.addEventListener("play", onPlay);
         g_player.addEventListener("ended", onPause);
         g_player.addEventListener("loadeddata", onPlayerReload);
-        setPlayerChangeHandler(true);
+        setPlayerChangeHandler(true); // netflix specific
         if (!g_player.paused) {
           // if player is already running
           setTitle(true); 
@@ -354,6 +361,8 @@ videoDetector = function() {
    * mutationHandler()
    * Handle a mutation event.
    * In case the player's src attribute has changed, reinit the player by calling initPlayer.
+   * Turns out, this is only needed for netflix, all other sites work well without it.
+   * Considering moving this to netflix-specific
    */
   function mutationHandler(mutationList) {
 
@@ -373,8 +382,14 @@ videoDetector = function() {
    * Handler for observes page title changes.
    * Youtube keeps resetting the title whenever ads are scheduled, even if they are blocked.
    * This handler is used to detect theses changes and set the title again
+   * FIXME: this breaks firefox when ads are enabled; find another way
    */
   function titleMutationHandler(mutationList) {
+    if (g_player.currentTime == 0) {
+      logDebug("0 runtime");
+      return;
+    } 
+
     for (let mutation of mutationList) {
       if (DEBUG) {
         let msg = "Title mutation observed";
@@ -385,13 +400,14 @@ videoDetector = function() {
       }
       if (isTitleNeeded() && !document.title.includes(removePrefixMod(g_currPrefix))) {
         logDebug("resetting title");
+        g_titleObs.disconnect();
         setTitle(true);
       }
     }
   }
 
   /*
-   * setg_playerChangedHandler()
+   * setPlayerChangedHandler()
    * Set up event handler for current player
    * to trigger when the player's attributes have changed.
    */
