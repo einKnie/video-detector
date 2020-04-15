@@ -2,7 +2,7 @@
 
 videoDetector = function() {
   
-  const DEBUG = true;
+  const DEBUG = false;
   var logDebug;
   if (DEBUG) {
     logDebug = console.log;
@@ -37,9 +37,7 @@ videoDetector = function() {
   const g_observer = new MutationObserver(mutationHandler);
 
   // set MutationObserver for title (youtube-specific; youtube resets title when an ad was supposed to play)
-  // FIXME: this breaks youtube when no ad blocker is installed
   const g_titleObs = new MutationObserver(titleMutationHandler);
-  //g_titleObs.observe(document.querySelector('title'), { childList: true });
  
   var   g_player   = null;
 

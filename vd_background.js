@@ -5,7 +5,7 @@
   // TODO: not finished
   // browser.runtime.onInstalled.addListener(showOnboarding);
 
-  const DEBUG = true;
+  const DEBUG = false;
   var logDebug;
   if (DEBUG) {
     logDebug = console.log;
