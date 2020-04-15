@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "VideoDetector",
   "author": "einKnie@gmx.at",
-  "version": "1.3",
+  "version": "1.4",
   "description": "Detects if a video is played in a tab and prepends the tab's title with a custom string.",
   
   "applications": {
