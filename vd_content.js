@@ -7,7 +7,7 @@ videoDetector = function() {
   if (DEBUG) {
     logDebug = console.log;
   } else {
-    logDebug = { };
+    logDebug = function() { };
   }
 
   // supported websites

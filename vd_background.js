@@ -10,7 +10,7 @@
   if (DEBUG) {
     logDebug = console.log;
   } else {
-    logDebug = { };
+    logDebug = function () { };
   }
 
   // base settings
