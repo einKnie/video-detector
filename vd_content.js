@@ -126,23 +126,24 @@ videoDetector = function() {
         }
       } break;
       case sites.NETFLIX: {
-        if (document.getElementsByClassName("PlayerControlsNeo__button-control-row").length != 0) {
-          g_player = document.querySelector("div[class^='VideoContainer']").querySelector("video");
+        if (document.querySelector("div[class='watch-video']") != null) {
+          g_player = document.querySelector("div[class='watch-video']").querySelector("video");
         }
       } break;
       case sites.ORF: {
-        if (document.getElementsByClassName("video_wrapper").length != 0) {
-          g_player = document.querySelector("div[class^='video_wrapper']").querySelector("video");
+        if (document.getElementById("player-wrapper").length != 0) {
+          g_player = document.querySelector("div[id='player-wrapper']").querySelector("video");
         }
       } break;
       case sites.VIVO: {
+        // does this still exist?
         if (document.getElementsByClassName("plyr").length != 0) {
           g_player = document.querySelector("div[class^='plyr']").querySelector("video");
         }
       } break;
       case sites.TWITCH: {
-        if (document.querySelector("[class='video-player'][data-a-player-type='site']") != null) {
-          g_player = document.querySelector("div[class='video-player']").querySelector("video");
+        if (document.querySelector("[class*='video-player'][data-a-player-type='site']") != null) {
+          g_player = document.querySelector("div[class*='video-player'][data-a-player-type='site']").querySelector("video");
         }
       } break;
      
