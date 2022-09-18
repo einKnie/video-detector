@@ -9,7 +9,6 @@
  // need three listeners instead of one, because i don't want the button inside the form.
  // need to manually 'disalke' the default action of form-submit -> reloads page, which is unnecessary.
  document.addEventListener("DOMContentLoaded", restoreOptions);
- document.getElementById("applybutton").addEventListener("click", saveOptions);
  document.getElementById("modifier").addEventListener("change", saveOptions);
  document.querySelector("form").addEventListener('submit', function(e) {e.preventDefault();});
  
@@ -56,8 +55,26 @@
          browser.storage.local.set({
            modifier: mod_result,
            sites:    result
-         }).then(function(){resolve("yay");}, function(){reject("Failed to store data");});});
+         }).then(function(){setSavedText(true); resolve("yay");},
+                 function(){reject("Failed to store data");});});
      }, onError).then(restoreOptions, onError);
+ }
+
+ /*
+ * toggle the display of as "Saved" info text
+ */
+ function setSavedText(on) {
+   var text = document.getElementById("saved_text");
+   if (text == null) {
+     onError("Did not find saved text element");
+     return;
+   }
+   if (on && (text.style.display != "block")) {
+     text.style.display = "block";
+     document.defaultView.setTimeout(setSavedText, 1000, false);
+   } else if (!on) {
+     text.style.display = "none";
+   }
  }
  
  /*
@@ -81,6 +98,8 @@
          var label = document.createElement("label");
          label.htmlFor = val;
          label.appendChild(document.createTextNode(`Enable on ${val}`));
+         chkbox.addEventListener('change', onCheckboxToggle);
+
          elem.appendChild(chkbox);
          elem.appendChild(label);
          buttons.appendChild(elem);
@@ -95,6 +114,10 @@
    
    let getting = browser.storage.local.get(["modifier", "sites"]);
    getting.then(setupSettingsPage, onError);
+ }
+
+ function onCheckboxToggle(e) {
+  saveOptions(e);
  }
  
  function onError(error) {

@@ -52,19 +52,6 @@ input[type="checkbox"] {
   font-size:        large;
 }
 
-.applybutton {
-  margin:           0px auto;
-  background-color: #1f201e;
-  color:            #aaaca6;
-  border:           1px solid #babcb7;
-  font-size:        large;
-  display:          block;
-}
-
-.applybutton:hover {
-  background-color: #4e504c;
-}
-
 .prefixtext {
   margin: 10px auto;
   border: 1px solid #babcb7;  
@@ -123,4 +110,10 @@ input[type="checkbox"] {
 
 .tooltip:hover .tooltiptext {
   visibility: visible;
+}
+
+.saved_text {
+  display:      none;
+  margin:       auto 5px;
+  text-align:   center;
 }
