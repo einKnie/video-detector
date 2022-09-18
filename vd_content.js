@@ -16,7 +16,6 @@ videoDetector = function() {
     VIMEO:   "vimeo",
     NETFLIX: "netflix",
     ORF:     "orf",
-    VIVO:    "vivo",
     TWITCH:  "twitch"
   };
 
@@ -133,12 +132,6 @@ videoDetector = function() {
       case sites.ORF: {
         if (document.getElementById("player-wrapper").length != 0) {
           g_player = document.querySelector("div[id='player-wrapper']").querySelector("video");
-        }
-      } break;
-      case sites.VIVO: {
-        // does this still exist?
-        if (document.getElementsByClassName("plyr").length != 0) {
-          g_player = document.querySelector("div[class^='plyr']").querySelector("video");
         }
       } break;
       case sites.TWITCH: {

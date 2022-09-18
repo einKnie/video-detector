@@ -37,7 +37,7 @@
 
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*", "*://*.orf.at/*", "*://*.vivo.sx/*", "*://*.twitch.tv/*"],
+      "matches": ["*://*.youtube.com/*", "*://*.vimeo.com/*", "*://*.netflix.com/*", "*://*.orf.at/*", "*://*.twitch.tv/*"],
       "js": ["vd_content.js"]
     }
   ]
