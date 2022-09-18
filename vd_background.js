@@ -55,15 +55,25 @@
 
 
   /*
-   * should actually just initialite storage if nothing is there yet (i.e. first start after installation)
+   * initialize storage if nothing is there yet (i.e. first start after installation)
+   * and deal with added/removed supported sites on update
    */
   function initSettings() {
     browser.storage.local.get(["modifier", "suspended", "sites"])
       .then(function(pref) {
+        // update current active sites with stored preferences
+        // this makes it easier for me to add/remove supported sites on the addon level
+        if (pref.sites) {
+          Object.keys(g_activeSites).forEach(site => {
+            if (pref.sites.hasOwnProperty(site)) {
+              g_activeSites[site] = pref.sites[site];
+            }
+          });
+        }
         let newPrefs = {
           modifier:   pref.modifier  || g_prefixDefault,
           suspended:  pref.suspended || g_suspendedDefault,
-          sites:      pref.sites     || g_activeSites
+          sites:      g_activeSites
         };
         browser.storage.local.set(newPrefs);
       }, onError);
